@@ -13,44 +13,7 @@ if (isDevelopment) {
   require('module').globalPaths.push(process.env.NODE_MODULES_PATH)
 }
 
-let sqlite3 = require('sqlite3').verbose();
-let db = new sqlite3.Database('./database.sqlite')
 
-// db.serialize(function(){
-//   db.each("SELECT * FROM User", (err, row) => {
-//     console.log(row.FirstName + " " + row.LastName);
-//   })
-// });
-// db.close();
-
-// let knex = require("knex")({
-//   client: "sqlite3",
-//   connection: {
-//     filename: "./database.sqlite"
-//   }
-// });
-
-// ipcMain.on("user:insert", (event, arg) => {
-//   knex("User").insert({FirstName: "Vasia", LastName: "Vasiliev", Age: "35"}).then(() => {
-//     mainWindow.reload();
-//   });
-//   event.returnValue = 'Done'
-// });
-
-ipcMain.on("mainWindowLoaded", function () {
-  // let result = knex.select("FirstName", "LastName").from("User")
-  // result.then(function(rows){
-  //   mainWindow.webContents.send("resultSent", rows);
-  // })
-
-  db.serialize(function(){
-    db.each("SELECT * FROM User", (err, rows) => {
-      mainWindow.webContents.send("resultSent", rows);
-    })
-  });
-  // db.close();
-
-});
 
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
 let mainWindow
@@ -112,4 +75,56 @@ app.on('ready', async () => {
     await installVueDevtools()
   }
   mainWindow = createMainWindow()
+})
+
+// ================= API functionality =================
+
+let sqlite3 = require('sqlite3').verbose();
+let db = new sqlite3.Database('./database.sqlite')
+
+ipcMain.on("mainWindowLoaded", function () {
+
+  db.serialize(function(){
+    db.each("SELECT * FROM Workers", (err, rows) => {
+      mainWindow.webContents.send("resultSent", rows);
+    })
+  });
+  // db.close();
+
+});
+
+ipcMain.on("printFirms", function() {
+  db.serialize(function(){
+    db.each("SELECT * FROM Firms", (err, rows) => {
+      mainWindow.webContents.send("printFirmsResult", rows);
+    })
+  });
+});
+
+// Add new worker
+ipcMain.on("add-worker", function (event, arg){
+  db.serialize(function () {
+    db.run(`INSERT into Workers (Name, Age, Sex, Firm, Start, End) values('${arg.name}', ${parseInt(arg.age)}, '${arg.sex}', '${arg.firm}', '${arg.startFormated}', '${arg.endFormated}')`, function(err){
+      if(err){
+        // event.returnValue = err
+        console.log(err)
+      } else {
+        event.returnValue = true;
+      }
+    })
+  });
+})
+
+// Delete worker
+ipcMain.on("delete-worker", function (event, arg) {
+  db.serialize(function () {
+    db.run(`DELETE from Workers WHERE Id=${arg}`, function(err){
+      if(err){
+        console.log(err);
+        event.returnValue = err;
+      } else {
+        event.returnValue = true;
+      }
+    })
+  });
 })

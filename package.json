@@ -12,7 +12,9 @@
     "serve:electron": "vue-cli-service serve:electron"
   },
   "dependencies": {
+    "jquery": "^3.3.1",
     "knex": "^0.15.2",
+    "materialize-css": "^1.0.0-rc.2",
     "sqlite3": "^4.0.2",
     "vue": "^2.5.17",
     "vue-router": "^3.0.1",
@@ -24,6 +26,8 @@
     "@vue/cli-service": "^3.0.4",
     "electron": "^2.0.2",
     "electron-rebuild": "^1.8.2",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.2",
     "vue-cli-plugin-electron-builder": "^1.0.0-rc.3",
     "vue-template-compiler": "^2.5.17"
   },

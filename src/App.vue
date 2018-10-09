@@ -1,31 +1,33 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
+  <div id="app" :class="{ collapsed: navCollapsed}">
+    <div id="nav" class="z-depth-4">
+      <router-link to="/"><div class="nav__item"><i class="fas fa-briefcase"></i><span>Workers</span></div></router-link>
+      <router-link to="/firms"><div class="nav__item"><i class="far fa-building"></i><span>Firms</span></div></router-link>
+      <router-link to="/salary"><div class="nav__item"><i class="fas fa-hand-holding-usd"></i><span>Salary</span></div></router-link>
+      <router-link to="/deposit"><div class="nav__item"><i class="fas fa-dollar-sign"></i><span>Deposit</span></div></router-link>
+      <router-link to="/report"><div class="nav__item"><i class="far fa-file-alt"></i><span>Report</span></div></router-link>
+      <a class="toogle-menu"><i @click="navCollapsed ? navCollapsed = false : navCollapsed = true" class="fas fa-chevron-circle-down"></i></a>
     </div>
-    <router-view/>
+    <div id="router-view">
+      <router-view/>
+    </div>
   </div>
 </template>
 
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-#nav {
-  padding: 30px;
-}
+<script>
+  export default {
+    data() {
+      return {
+        navCollapsed: false
+      }
+    }
+  }
+</script>
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
+<style lang="stylus">
+@import "styles/variables.styl";
+@import "styles/fa-icons.min.css";
+@import "styles/materialize.min.css";
+@import "styles/main.styl";
 
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
 </style>

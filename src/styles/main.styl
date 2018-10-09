@@ -1,0 +1,112 @@
+body
+  margin 0
+
+#app
+  font-family: 'Avenir', Helvetica, Arial, sans-serif
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+  text-align: center
+  color: #2c3e50
+
+//Left Navbar Styles
+#nav
+  background: #27374b
+  position: fixed
+  top: 0
+  left: 0
+  width: 20%
+  height: 100%
+  text-align left
+  max-width: 20%
+  transition: max-width .2s ease-in-out
+
+.collapsed #nav
+  max-width: 65px
+  .toogle-menu i
+    transform rotate(-90deg)
+  .nav__item span
+    max-width: 0
+
+#nav a
+  font-weight: bold
+  color: #a7bbcb
+  text-decoration: none
+
+  &.toogle-menu
+    font-size: 20px
+    margin: 25px 17px
+    display: block
+
+    i
+      cursor: pointer
+      transform rotate(90deg)
+      transition: all .2s ease-in-out
+
+  .nav__item
+    padding 20px 20px
+    text-align: left
+    background #2e3f57
+    display: flex
+    align-items: center
+
+    i
+      margin-right: 10px
+      width: 15px
+      text-align center
+    span
+      max-width: 400px
+      overflow-x: hidden
+      transition: all .2s ease-in-out
+      display: inline-block
+
+
+#nav a.router-link-exact-active
+  color: #fff
+
+  .nav__item
+    background #3c5068
+
+//Right Block styles
+
+#router-view
+  margin-left: 20%
+  transition: margin-left .2s ease-in-out
+.collapsed #router-view
+  margin-left: 65px
+
+.view-wrapper
+  padding: 20px 30px
+
+.page-title
+  height: 120px
+  background: $main-light
+  color: #FFF
+  display: flex
+  align-items: center
+  justify-content: center
+  margin-bottom: 50px
+
+.home
+  text-align left
+
+.datepicker-footer
+  display: none
+.add-worker-btn
+  margin-bottom: 20px
+.worker-btn
+  width: 35px
+  padding: 0
+  background transparent
+  border: none
+  cursor: pointer
+  i
+    font-size: 14px
+    color: alpha($main-color, .9)
+    &.danger
+      color: $red
+
+//Add worker
+
+.add-worker
+  .form-btns>*
+    width: 100px
