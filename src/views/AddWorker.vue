@@ -5,7 +5,7 @@
         </div>
 
         <div class="container">
-            <form>
+            <form v-on:submit.prevent="addWorker()">
                 <div class="input-field col s6 m6">
                     <input v-model="newWorker.name" id="worker_name" type="text" class="validate">
                     <label for="worker_name">Name</label>
@@ -40,7 +40,7 @@
 
 
                 <div class="form-btns">
-                    <button class="waves-effect waves-light btn" @click="addWorker">Save</button>
+                    <button class="waves-effect waves-light btn">Save</button>
                     <router-link to="/" class="waves-effect waves-light btn red" style="margin-left: 20px">Cancel</router-link>
                 </div>
             </form>
@@ -74,8 +74,8 @@
 
       this.materializeInit();
 
-      ipcRenderer.send("printFirms")
-      ipcRenderer.on("printFirmsResult", function (evt, result) {
+      ipcRenderer.send("printFirms");
+      ipcRenderer.on("printFirms:res", function (evt, result) {
         firms.push(result)
       });
 
@@ -88,8 +88,7 @@
       redirect(){
         router.push('/');
       },
-      addWorker (e) {
-        e.preventDefault
+      addWorker () {
         ipcRenderer.sendSync('add-worker', this.newWorker) === true ? this.redirect() : console.log("DB Error");
       },
       materializeInit(){

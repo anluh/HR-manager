@@ -11,6 +11,7 @@
                 <i class="fas fa-plus" style="font-size: 18px;"></i>
             </router-link>
 
+
             <table class="striped">
                 <thead>
                 <tr>
@@ -41,6 +42,13 @@
                 </tbody>
             </table>
 
+            <pagination
+                    :current="pagination.currentPage"
+                    :total="pagination.totalItems"
+                    :per-page="pagination.perPage"
+                    @page-changed="fetchWorkers">
+            </pagination>
+
         </div>
 
     </div>
@@ -48,30 +56,49 @@
 
 <script>
   // @ is an alias to /src
+  import router from '../router'
   import HelloWorld from '@/components/HelloWorld.vue'
+  import pagination from '@/components/pagination.vue'
 
   const electron = require('electron');
   const {ipcRenderer} = electron;
 
+
   export default {
     name: 'home',
     components: {
-      HelloWorld
+      HelloWorld,
+      pagination
     },
     created() {
+      let vm = this;
       let workers = this.workers;
-      ipcRenderer.send("mainWindowLoaded")
-      ipcRenderer.on("resultSent", function (evt, result) {
-          workers.push(result)
 
+      ipcRenderer.send('printWorkers', this.pagination);
+      ipcRenderer.on("printWorkers:res", function (evt, result) {
+        workers.push(result.rows);
+        vm.pagination.totalItems = parseInt(result.totalItems);
       });
+      router.push('/#/');
     },
     data() {
       return {
-        workers: []
+        workers: [],
+        pagination: {
+          totalItems: 0,
+          perPage: 5,
+          currentPage: 1
+        }
       }
     },
     methods:{
+      fetchWorkers(page){
+        if(page > 0 && page<=Math.ceil(this.pagination.totalItems/this.pagination.perPage)){
+          this.pagination.currentPage = page;
+          this.workers.splice(0, this.workers.length);
+          ipcRenderer.send('printWorkers', this.pagination)
+        }
+      },
       deleteWorker(worker){
         ipcRenderer.sendSync("delete-worker", worker.Id);
         this.workers.splice(this.workers.indexOf(worker), 1);

@@ -82,21 +82,31 @@ app.on('ready', async () => {
 let sqlite3 = require('sqlite3').verbose();
 let db = new sqlite3.Database('./database.sqlite')
 
-ipcMain.on("mainWindowLoaded", function () {
+ipcMain.on("printWorkers", (event, arg) => {
+  let pageOffset = arg.currentPage * arg.perPage - arg.perPage;
 
   db.serialize(function(){
-    db.each("SELECT * FROM Workers", (err, rows) => {
-      mainWindow.webContents.send("resultSent", rows);
+    let totalItems = 0;
+    db.each(`SELECT count(*) FROM Workers`, (err, rows) => {
+      totalItems = rows['count(*)'];
+    });
+    db.each(`SELECT * FROM Workers LIMIT ${arg.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+      let response = {};
+      response.totalItems = totalItems;
+      response.rows = rows;
+      mainWindow.webContents.send("printWorkers:res", response);
     })
   });
   // db.close();
 
 });
 
+
+
 ipcMain.on("printFirms", function() {
   db.serialize(function(){
     db.each("SELECT * FROM Firms", (err, rows) => {
-      mainWindow.webContents.send("printFirmsResult", rows);
+      mainWindow.webContents.send("printFirms:res", rows);
     })
   });
 });
