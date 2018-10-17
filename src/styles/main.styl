@@ -111,6 +111,11 @@ body
       color: $red
   i:hover
     color: $main-light
+table
+  td.active
+    color: $success
+  td.inactive
+    color: $red
 
 .form-btns
   margin-top: 40px
@@ -124,6 +129,7 @@ body
 // Filter
 .filter-wrapper
   display: flex
+  justify-content: space-between
 
 .filter-by
   .select-wrapper
@@ -137,6 +143,10 @@ body
   .select-dropdown
     border-bottom: none!important
 
+.activity-filter
+  label
+    display: block
+    margin-left: 40px
 
 .filter-form
   display: flex

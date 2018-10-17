@@ -115,26 +115,56 @@ ipcMain.on("printWorkersFilter", (event, arg) => {
 
   if(filter.key) {
 
-
-    db.serialize(function () {
-      let totalItems = 0;
-      db.each(`SELECT count(*) FROM Workers WHERE ${filter.key} = '${filter.value}'`, (err, rows) => {
-        totalItems = rows['count(*)'];
+    // Check if Filter by Active exist
+    if(arg.filterBy.Active){
+      db.serialize(function () {
+        let totalItems = 0;
+        db.each(`SELECT count(*) FROM Workers WHERE ${filter.key} = '${filter.value}' AND Active = ${parseInt(arg.filterBy.Active)}`, (err, rows) => {
+          totalItems = rows['count(*)'];
+        });
+        db.each(`SELECT * FROM Workers WHERE ${filter.key} = '${filter.value}' AND Active = ${parseInt(arg.filterBy.Active)} LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+          let response = {};
+          response.totalItems = totalItems;
+          response.rows = rows;
+          mainWindow.webContents.send("printWorkersFilter:res", response);
+        })
       });
-      db.each(`SELECT * FROM Workers WHERE ${filter.key} = '${filter.value}' LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
-        let response = {};
-        response.totalItems = totalItems;
-        response.rows = rows;
-        mainWindow.webContents.send("printWorkersFilter:res", response);
-      })
-    });
+    } else {
 
+      db.serialize(function () {
+        let totalItems = 0;
+        db.each(`SELECT count(*) FROM Workers WHERE ${filter.key} = '${filter.value}'`, (err, rows) => {
+          totalItems = rows['count(*)'];
+        });
+        db.each(`SELECT * FROM Workers WHERE ${filter.key} = '${filter.value}' LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+          let response = {};
+          response.totalItems = totalItems;
+          response.rows = rows;
+          mainWindow.webContents.send("printWorkersFilter:res", response);
+        })
+      });
+    }
   }
 
 });
 
+// Just Active Filter
+ipcMain.on("workerFilterActive", (event, arg) => {
+  let pageOffset = arg.pagination.currentPage * arg.pagination.perPage - arg.pagination.perPage;
 
-
+  db.serialize(function () {
+    let totalItems = 0;
+    db.each(`SELECT count(*) FROM Workers WHERE Active = ${parseInt(arg.filterBy.Active)}`, (err, rows) => {
+      totalItems = rows['count(*)'];
+    });
+    db.each(`SELECT * FROM Workers WHERE Active = ${parseInt(arg.filterBy.Active)} LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+      let response = {};
+      response.totalItems = totalItems;
+      response.rows = rows;
+      mainWindow.webContents.send("workerFilterActive:res", response);
+    })
+  });
+});
 
 
 ipcMain.on("printFirms", function() {

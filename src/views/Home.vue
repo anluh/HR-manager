@@ -51,8 +51,24 @@
                         </div>
                     </div>
 
+
                     <button class="filter-form__submit btn waves-effect"><i class="fas fa-search"></i>Filter</button>
                 </form>
+
+                <div class="activity-filter" >
+                    <label>
+                        <input v-model="activeFilter" class="with-gap" name="activity" value="" type="radio"  />
+                        <span>All</span>
+                    </label>
+                    <label>
+                        <input v-model="activeFilter" class="with-gap" name="activity" value="1" type="radio"  />
+                        <span>Active</span>
+                    </label>
+                    <label>
+                        <input v-model="activeFilter" class="with-gap" name="activity" value="0" type="radio"  />
+                        <span>Inactive</span>
+                    </label>
+                </div>
 
             </div>
 
@@ -66,6 +82,7 @@
                     <th>Firm</th>
                     <th>Start</th>
                     <th>End</th>
+                    <th>Status</th>
                 </tr>
                 </thead>
 
@@ -78,6 +95,8 @@
                     <td>{{ worker.Firm }}</td>
                     <td>{{ worker.Start }}</td>
                     <td>{{ worker.End }}</td>
+                    <td class="active" v-if="worker.Active === 1">active</td>
+                    <td class="inactive" v-if="worker.Active === 0">inactive</td>
                     <td>
                         <router-link to="/edit/worker" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
                         <button class="worker-btn" @click="deleteWorker(worker)"><i class="danger far fa-trash-alt"></i></button>
@@ -130,6 +149,7 @@
       return {
         workers: [],
         firms: [],
+        activeFilter: '',
         filterBy:{
           Field: 'None',
           Name:'',
@@ -137,7 +157,8 @@
           Start: '',
           StartFormated: '',
           End: '',
-          EndFormated: ''
+          EndFormated: '',
+          Active: ''
         },
         pagination: {
           totalItems: 0,
@@ -174,6 +195,12 @@
         vm.pagination.totalItems = parseInt(result.totalItems);
       });
 
+      // Just Active Filter
+      ipcRenderer.on("workerFilterActive:res", function (evt, result) {
+        workers.push(result.rows);
+        vm.pagination.totalItems = parseInt(result.totalItems);
+      });
+
       ipcRenderer.send("printFirms");
       ipcRenderer.on("printFirms:res", function (evt, result) {
         firms.push(result)
@@ -182,11 +209,10 @@
     },
     computed:{
       paginationMethod(){
-        return this.filterBy.Field === 'None' ? this.fetchWorkers : this.fetchWorkersFilter
+        return this.filterBy.Field === 'None' ? (this.filterBy.Active !== '' ? this.activeFilterChanged : this.fetchWorkers) : this.fetchWorkersFilter
       },
       validateFilter(){
         if(this.filterBy.Field === 'Name') {
-          console.log("name")
           return this.$v.filterBy.Name.$touch();
         } else if(this.filterBy.Field === 'Firm') {
           return this.$v.filterBy.Firm.$touch();
@@ -217,7 +243,7 @@
       },
       fetchWorkersFilter(page){
         // Validate
-        this.validateFilter
+        this.validateFilter;
         // Disable pagination if not valid
         if (this.validateFilterCheck) {
           if (page > 0 && page <= Math.ceil(this.pagination.totalItems / this.pagination.perPage)) {
@@ -229,6 +255,22 @@
 
             this.workers.splice(0, this.workers.length);
             ipcRenderer.send('printWorkersFilter', query)
+          }
+        }
+      },
+      activeFilterChanged(page){
+        if(this.filterBy.Field === 'None'){
+          if(this.filterBy.Active === ''){
+            this.fetchWorkers(1);
+          } else {
+            this.pagination.currentPage = page;
+
+            let query = {};
+            query.pagination = this.pagination;
+            query.filterBy = this.filterBy;
+
+            this.workers.splice(0, this.workers.length);
+            ipcRenderer.send('workerFilterActive', query)
           }
         }
       },
@@ -295,6 +337,12 @@
         return this.pagination.currentPage * this.pagination.perPage - this.pagination.perPage + index + 1;
       },
 
+    },
+    watch:{
+      activeFilter(){
+        this.filterBy.Active = this.activeFilter;
+        this.activeFilterChanged(1);
+      }
     }
   }
 </script>
