@@ -76,6 +76,7 @@ body
 
 .view-wrapper
   padding: 20px 30px
+  text-align left
 
 .page-title
   height: 120px
@@ -99,14 +100,80 @@ body
   background transparent
   border: none
   cursor: pointer
+  &:focus
+    background: none
   i
     font-size: 14px
     color: alpha($main-color, .9)
-    &.danger
+    transition: all .2s ease-in-out
+
+    &.danger:hover
       color: $red
+  i:hover
+    color: $main-light
+
+.form-btns
+  margin-top: 40px
 
 //Add worker
 
 .add-worker
   .form-btns>*
     width: 100px
+
+// Filter
+.filter-wrapper
+  display: flex
+
+.filter-by
+  .select-wrapper
+    display: inline-block
+    width: 65px
+    margin-left: 15px
+    margin-right: 15px
+    .caret
+      top: -7px
+
+  .select-dropdown
+    border-bottom: none!important
+
+
+.filter-form
+  display: flex
+  flex 1
+  align-items: center
+  justify-content: space-between
+
+  input[type='text']:not(.select-dropdown.dropdown-trigger)
+    width: 200px
+  input[type='text'].datepicker
+    width: 120px
+
+  &__date
+    display: flex
+
+    .input-field
+      margin-left: 25px
+
+  .filter-form__submit
+    margin-left: 15px
+    i
+      font-size: 14px
+      margin-right: 5px
+
+//Pagination
+.pagination-section
+  display: flex
+  justify-content: space-between
+  margin-top: 20px
+
+.items-per-page
+  .input-field
+    display: inline-block
+    width: 50px
+    margin-left: 10px
+    input
+      height: 30px
+
+.pagination>*
+  margin: 0 10px

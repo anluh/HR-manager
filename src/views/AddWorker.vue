@@ -79,10 +79,6 @@
         firms.push(result)
       });
 
-      ipcRenderer.on('add-worker:res', () => {
-        router.push('/');
-      })
-
     },
     methods:{
       redirect(){

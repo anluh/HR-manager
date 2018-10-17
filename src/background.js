@@ -97,9 +97,43 @@ ipcMain.on("printWorkers", (event, arg) => {
       mainWindow.webContents.send("printWorkers:res", response);
     })
   });
-  // db.close();
 
 });
+
+ipcMain.on("printWorkersFilter", (event, arg) => {
+  let pageOffset = arg.pagination.currentPage * arg.pagination.perPage - arg.pagination.perPage;
+  let filter = {};
+
+  if(arg.filterBy.Name){
+    filter.key =  'Name';
+    filter.value = arg.filterBy.Name;
+
+  } else if (arg.filterBy.Firm){
+    filter.key =  'Firm';
+    filter.value = arg.filterBy.Firm;
+  }
+
+  if(filter.key) {
+
+
+    db.serialize(function () {
+      let totalItems = 0;
+      db.each(`SELECT count(*) FROM Workers WHERE ${filter.key} = '${filter.value}'`, (err, rows) => {
+        totalItems = rows['count(*)'];
+      });
+      db.each(`SELECT * FROM Workers WHERE ${filter.key} = '${filter.value}' LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+        let response = {};
+        response.totalItems = totalItems;
+        response.rows = rows;
+        mainWindow.webContents.send("printWorkersFilter:res", response);
+      })
+    });
+
+  }
+
+});
+
+
 
 
 
@@ -129,6 +163,35 @@ ipcMain.on("add-worker", function (event, arg){
 ipcMain.on("delete-worker", function (event, arg) {
   db.serialize(function () {
     db.run(`DELETE from Workers WHERE Id=${arg}`, function(err){
+      if(err){
+        console.log(err);
+        event.returnValue = err;
+      } else {
+        event.returnValue = true;
+      }
+    })
+  });
+})
+
+// Add new firm
+ipcMain.on("add-firm", function (event, arg){
+  db.serialize(function () {
+    console.log(`INSERT into Firms (Name, Address, Active) values('${arg.name}', '${arg.address}', ${parseInt(arg.active)})`);
+    db.run(`INSERT into Firms (Name, Address, Active) values('${arg.name}', '${arg.address}', ${parseInt(arg.active)})`, function(err){
+      if(err){
+        // event.returnValue = err
+        console.log(err)
+      } else {
+        event.returnValue = true;
+      }
+    })
+  });
+})
+
+// Delete firm
+ipcMain.on("delete-firm", function (event, arg) {
+  db.serialize(function () {
+    db.run(`DELETE from Firms WHERE Id=${arg}`, function(err){
       if(err){
         console.log(err);
         event.returnValue = err;

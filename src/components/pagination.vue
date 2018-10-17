@@ -1,5 +1,5 @@
 <template>
-    <div class="pagination-template">
+    <div v-show="perPage < total" class="pagination-template">
         <!--<button :disabled="current === 1" class="pagination__left btn-small waves-effect waves-light" @click="changePage(prevPage)">Previous</button>-->
         <div class="pagination--wrapper">
             <div :class="{disabled: current === 1}" class="pagination__btn" @click="changePage(prevPage)"><i class="fas fa-chevron-left"></i></div>
@@ -16,8 +16,6 @@
             <div :class="{disabled: current === totalPages}" class="pagination__btn" @click="changePage(nextPage)"><i class="fas fa-chevron-right"></i></div>
             <!--<li class="pagination__mid">of {{ totalPages }}</li>-->
         </div>
-        <!--<span v-for="page in pages" @click="changePage(page)" :key="page">{{ page }}</span>-->
-        <!--<button :disabled="current === totalPages" class="pagination__right btn-small waves-effect waves-light" @click="changePage(nextPage)">Next</button>-->
     </div>
 </template>
 
@@ -30,7 +28,6 @@
         default: 1
       },
       perPage:{
-        type: Number,
         default: 10
       },
       total:{
