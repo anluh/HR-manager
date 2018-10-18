@@ -72,7 +72,7 @@
 
             </div>
 
-            <table class="striped">
+            <table class="striped table-list">
                 <thead>
                 <tr>
                     <th>№</th>
@@ -88,9 +88,9 @@
 
                 <tbody>
                 <tr v-for="(worker, index) in workers" :key="index">
-                    <td>{{ indexOffset(index) }}</td>
+                    <td class="num">{{ indexOffset(index) }}</td>
                     <td>{{ worker.Name }}</td>
-                    <td>{{ worker.Age }}</td>
+                    <td>{{ worker.Age | ageFromBirth }}</td>
                     <td>{{ worker.Sex }}</td>
                     <td>{{ worker.Firm }}</td>
                     <td>{{ worker.Start }}</td>
@@ -99,7 +99,10 @@
                     <td class="inactive" v-if="worker.Active === 0">inactive</td>
                     <td>
                         <router-link to="/edit/worker" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
-                        <button class="worker-btn" @click="deleteWorker(worker)"><i class="danger far fa-trash-alt"></i></button>
+                        <modal @submit="deleteWorker(worker)" submit-btn="Delete">
+                            <i class="danger far fa-trash-alt"></i>
+                            <div slot="popup-text">Do you want to delete this worker?</div>
+                        </modal>
                     </td>
                 </tr>
                 </tbody>
@@ -132,7 +135,7 @@
 
 <script>
   // @ is an alias to /src
-  // import router from '../router'
+  import modal from '@/components/modal.vue'
   import pagination from '@/components/pagination.vue'
   import { required } from 'vuelidate/lib/validators'
 
@@ -143,7 +146,8 @@
   export default {
     name: 'home',
     components: {
-      pagination
+      pagination,
+      modal
     },
     data() {
       return {
@@ -337,6 +341,14 @@
         return this.pagination.currentPage * this.pagination.perPage - this.pagination.perPage + index + 1;
       },
 
+    },
+    filters:{
+      ageFromBirth(val){
+        let parts = val.split('.');
+        let birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        let ageDate = new Date(Date.now() - birthDate.getTime());
+        return Math.abs(ageDate.getFullYear() - 1970);
+      }
     },
     watch:{
       activeFilter(){

@@ -5,14 +5,20 @@
         </div>
 
         <div class="container">
-            <form v-on:submit.prevent="addFirm()">
+            <form v-on:submit.prevent="$v.newFirm.$touch(); if(!$v.newFirm.$invalid){addFirm()}">
                 <div class="input-field col s6 m6">
-                    <input v-model="newFirm.name" id="firm_name" type="text" class="validate">
+                    <input id="firm_name" type="text" class="validate"
+                           v-model="newFirm.name"
+                           :class="{ invalid: $v.newFirm.name.$error, valid: !$v.newFirm.name.$invalid }">
                     <label for="firm_name">Name</label>
+                    <span v-if="$v.newFirm.name.$dirty && !$v.newFirm.name.required" class="danger">This field is required</span>
                 </div>
                 <div class="input-field col s6 m6">
-                    <input v-model="newFirm.address" id="firm_address" type="text" class="validate">
+                    <input id="firm_address" type="text" class="validate"
+                           v-model="newFirm.address"
+                           :class="{ invalid: $v.newFirm.address.$error, valid: !$v.newFirm.address.$invalid }">
                     <label for="firm_address">Address</label>
+                    <span v-if="$v.newFirm.address.$dirty && !$v.newFirm.address.required" class="danger">This field is required</span>
                 </div>
                 <div class="input-field input-field--select col s12 m6">
                     <select id="firm_status" v-model="newFirm.active">
@@ -34,6 +40,7 @@
 <script>
   const {ipcRenderer} = require('electron');
   import router from '../router'
+  import { required } from 'vuelidate/lib/validators'
 
   export default {
     name: "addfirm",
@@ -42,8 +49,18 @@
         newFirm: {
           name: '',
           address: '',
-          active: null,
+          active: 1,
         },
+      }
+    },
+    validations: {
+      newFirm: {
+        name: {
+          required
+        },
+        address: {
+          required
+        }
       }
     },
     created() {

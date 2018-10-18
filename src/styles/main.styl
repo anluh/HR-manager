@@ -8,6 +8,43 @@ body
   text-align: center
   color: #2c3e50
 
+.modal-wrapper
+  display: inline-block
+
+.fade-enter-active, .fade-leave-active
+  transition: opacity .3s
+
+.fade-enter, .fade-leave-to
+  opacity: 0
+
+.popup
+  position: fixed
+  width: 500px
+  padding 30px 40px 20px
+  background-color #fff
+  left: 50%
+  top: 50%
+  z-index: 3
+  transform: translate(-50%, -50%)
+
+  &__cover
+    background rgba(0,0,0,0.3)
+    position: fixed
+    width: 100%
+    height: 100%
+    top: 0
+    left: 0
+    z-index: 2
+
+  &__title
+    margin-bottom: 40px
+
+  &__buttons
+    text-align right
+    button
+      margin-left: 20px
+      min-width: 100px
+
 //Left Navbar Styles
 #nav
   background: #27374b
@@ -111,11 +148,15 @@ body
       color: $red
   i:hover
     color: $main-light
-table
+.table-list
   td.active
     color: $success
   td.inactive
     color: $red
+  td
+    min-width 100px
+  td.num
+    min-width: 35px
 
 .form-btns
   margin-top: 40px
@@ -125,6 +166,7 @@ table
 .add-worker
   .form-btns>*
     width: 100px
+
 
 // Filter
 .filter-wrapper

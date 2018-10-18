@@ -5,14 +5,26 @@
         </div>
 
         <div class="container">
-            <form v-on:submit.prevent="addWorker()">
+            <form v-on:submit.prevent="$v.newWorker.$touch(); if(!$v.newWorker.$invalid){addWorker()}">
                 <div class="input-field col s6 m6">
-                    <input v-model="newWorker.name" id="worker_name" type="text" class="validate">
+                    <input v-model="newWorker.name"
+                           :class="{ invalid: $v.newWorker.name.$error, valid: !$v.newWorker.name.$invalid }"
+                           id="worker_name"
+                           type="text"
+                           class="validate">
                     <label for="worker_name">Name</label>
+                    <span v-if="$v.newWorker.name.$dirty && !$v.newWorker.name.required" class="danger">This field is required</span>
                 </div>
                 <div class="input-field col s6 m6">
-                    <input v-model="newWorker.age" id="last_name" type="text" class="validate">
-                    <label for="last_name">Age</label>
+                    <input v-model="newWorker.age"
+                           :class="{ invalid: $v.newWorker.age.$error, valid: !$v.newWorker.age.$invalid }"
+                           id="last_name"
+                           type="text"
+                           class="validate">
+                    <label for="last_name">Birthday</label>
+                    <span v-if="$v.newWorker.age.$dirty && !$v.newWorker.age.required" class="danger">This field is required</span>
+                    <span v-if="$v.newWorker.age.$dirty && !$v.newWorker.age.isDate && $v.newWorker.age.required" class="danger">Enter a valid birthday DD.MM.YYYY</span>
+
                 </div>
                 <div class="input-field col s12 m6">
                     <select v-model="newWorker.sex">
@@ -37,6 +49,13 @@
                     <input @change="saveEndDate()" type="text" class="datepicker"  id="worker_end">
                     <label for="worker_end" class="">End</label>
                 </div>
+                <div class="input-field col s12 m6">
+                    <select v-model="newWorker.Active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                    <label>Status</label>
+                </div>
 
 
                 <div class="form-btns">
@@ -49,8 +68,12 @@
 </template>
 
 <script>
-  const {ipcRenderer} = require('electron');
+  import moment from 'moment';
   import router from '../router'
+  const {ipcRenderer} = require('electron');
+  import { required } from 'vuelidate/lib/validators'
+
+  const isDate = (value) => moment(value, 'DD.MM.YYYY', true).isValid()
 
   export default {
     name: "addworker",
@@ -58,15 +81,29 @@
       return {
         newWorker: {
           name: '',
-          age: null,
+          age: '',
           sex: '',
           firm: '',
           start: '',
           startFormated: '',
           end: '',
           endFormated: '',
+          Active: 1
         },
         firms: []
+      }
+    },
+    validations:{
+      newWorker: {
+        name: {
+          required
+        },
+        age: {
+          required,
+          isDate(value){
+            return isDate(value)
+          }
+        }
       }
     },
     created() {

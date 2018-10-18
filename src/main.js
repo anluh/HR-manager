@@ -15,6 +15,8 @@ Vue.filter('reverse', function(value) {
   return value.slice().reverse();
 });
 
+
+
 new Vue({
   router,
   store,

@@ -178,7 +178,7 @@ ipcMain.on("printFirms", function() {
 // Add new worker
 ipcMain.on("add-worker", function (event, arg){
   db.serialize(function () {
-    db.run(`INSERT into Workers (Name, Age, Sex, Firm, Start, End) values('${arg.name}', ${parseInt(arg.age)}, '${arg.sex}', '${arg.firm}', '${arg.startFormated}', '${arg.endFormated}')`, function(err){
+    db.run(`INSERT into Workers (Name, Age, Sex, Firm, Start, End, Active) values('${arg.name}', '${arg.age}', '${arg.sex}', '${arg.firm}', '${arg.startFormated}', '${arg.endFormated}', ${parseInt(arg.Active)})`, function(err){
       if(err){
         // event.returnValue = err
         console.log(err)
@@ -206,7 +206,6 @@ ipcMain.on("delete-worker", function (event, arg) {
 // Add new firm
 ipcMain.on("add-firm", function (event, arg){
   db.serialize(function () {
-    console.log(`INSERT into Firms (Name, Address, Active) values('${arg.name}', '${arg.address}', ${parseInt(arg.active)})`);
     db.run(`INSERT into Firms (Name, Address, Active) values('${arg.name}', '${arg.address}', ${parseInt(arg.active)})`, function(err){
       if(err){
         // event.returnValue = err
