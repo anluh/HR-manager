@@ -208,8 +208,8 @@ ipcMain.on("add-firm", function (event, arg){
   db.serialize(function () {
     db.run(`INSERT into Firms (Name, Address, Active) values('${arg.name}', '${arg.address}', ${parseInt(arg.active)})`, function(err){
       if(err){
-        // event.returnValue = err
-        console.log(err)
+        console.log(err);
+        event.returnValue = err
       } else {
         event.returnValue = true;
       }
@@ -220,13 +220,23 @@ ipcMain.on("add-firm", function (event, arg){
 // Delete firm
 ipcMain.on("delete-firm", function (event, arg) {
   db.serialize(function () {
-    db.run(`DELETE from Firms WHERE Id=${arg}`, function(err){
-      if(err){
-        console.log(err);
-        event.returnValue = err;
+    // Before delete firm, check if there are workers on this firm
+    let check = null;
+    db.each(`SELECT count(*) FROM Workers WHERE Firm = '${arg.Name}'`, (err, rows) => {
+      check = rows['count(*)'];
+
+      if(check === 0) {
+        db.run(`DELETE from Firms WHERE Id=${arg.Id}`, function (err) {
+          if (err) {
+            console.log(err);
+            event.returnValue = err;
+          } else {
+            event.returnValue = true;
+          }
+        })
       } else {
-        event.returnValue = true;
+        event.returnValue = 'err_workers'
       }
-    })
+    });
   });
-})
+});

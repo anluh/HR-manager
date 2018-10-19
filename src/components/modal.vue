@@ -1,13 +1,14 @@
 <template>
     <div class="modal-wrapper">
         <button class="worker-btn" @click="openModal()">
-            <slot><i class="danger far fa-trash-alt"></i></slot>
+            <slot></slot>
         </button>
         <transition name="fade">
             <div v-show="open" @click="closeModal()" class="popup__cover"></div>
         </transition>
         <transition name="fade">
             <div v-show="open" class="popup">
+                <h6 class="popup__header"><slot name="popup-header"></slot></h6>
                 <h5 class="popup__title"><slot name="popup-text">Are you sure?</slot></h5>
                 <div class="popup__buttons">
                     <button @click="submit()" class="waves-effect btn-small btn">{{ submitBtn }}</button>
@@ -26,9 +27,8 @@
         open: false
       }
     },
-    model: {
-      prop: 'open',
-      event: 'cancel'
+    created(){
+      this.open = this.openProp;
     },
     props:{
       cancelBtn: {
@@ -37,6 +37,10 @@
       submitBtn: {
         type: String,
         default: 'Ok'
+      },
+      openProp: {
+        type: Boolean,
+        default: false
       }
     },
     methods:{
@@ -47,7 +51,8 @@
         this.open = false;
       },
       submit(){
-        this.$emit('submit')
+        this.$emit('submit');
+        this.open = false
       }
     }
   }

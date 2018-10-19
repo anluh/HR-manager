@@ -17,6 +17,19 @@ body
 .fade-enter, .fade-leave-to
   opacity: 0
 
+.slide-fade-enter-active
+  transition: all .3s ease
+
+.slide-fade-leave-active
+  transition: all .6s cubic-bezier(1.0, 0.5, 0.8, 1.0)
+
+.slide-fade-enter
+  transform: translateY(10px)
+  opacity: 0
+.slide-fade-leave-to
+  transform: translateY(-10px)
+  opacity: 0
+
 .popup
   position: fixed
   width: 500px
@@ -39,11 +52,22 @@ body
   &__title
     margin-bottom: 40px
 
+  &__header
+    text-transform: uppercase
+
   &__buttons
     text-align right
     button
       margin-left: 20px
       min-width: 100px
+.firms .toast
+  position: absolute
+  width: 96%
+  left: 2%
+  top: 120px
+
+  &.toast--error
+    background $red-lighten
 
 //Left Navbar Styles
 #nav
