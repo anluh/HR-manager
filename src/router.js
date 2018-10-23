@@ -30,7 +30,7 @@ export default new Router({
       component: () => import('./views/AddWorker.vue')
     },
     {
-      path: '/edit/worker',
+      path: '/worker/edit/:id',
       name: 'editworker',
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route
@@ -44,6 +44,14 @@ export default new Router({
       // this generates a separate chunk (about.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('./views/AddFirm.vue')
+    },
+    {
+      path: '/firm/edit/:id',
+      name: 'editfirm',
+      // route level code-splitting
+      // this generates a separate chunk (about.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('./views/EditFirm.vue')
     }
   ]
 })

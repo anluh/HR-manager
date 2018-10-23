@@ -7,27 +7,27 @@
         <div class="container">
             <form v-on:submit.prevent="$v.newWorker.$touch(); if(!$v.newWorker.$invalid){addWorker()}">
                 <div class="input-field col s6 m6">
-                    <input v-model="newWorker.name"
-                           :class="{ invalid: $v.newWorker.name.$error, valid: !$v.newWorker.name.$invalid }"
+                    <input v-model="newWorker.Name"
+                           :class="{ invalid: $v.newWorker.Name.$error, valid: !$v.newWorker.Name.$invalid }"
                            id="worker_name"
                            type="text"
                            class="validate">
                     <label for="worker_name">Name</label>
-                    <span v-if="$v.newWorker.name.$dirty && !$v.newWorker.name.required" class="danger">This field is required</span>
+                    <span v-if="$v.newWorker.Name.$dirty && !$v.newWorker.Name.required" class="danger">This field is required</span>
                 </div>
                 <div class="input-field col s6 m6">
-                    <input v-model="newWorker.age"
-                           :class="{ invalid: $v.newWorker.age.$error, valid: !$v.newWorker.age.$invalid }"
+                    <input v-model="newWorker.Age"
+                           :class="{ invalid: $v.newWorker.Age.$error, valid: !$v.newWorker.Age.$invalid }"
                            id="last_name"
                            type="text"
                            class="validate">
                     <label for="last_name">Birthday</label>
-                    <span v-if="$v.newWorker.age.$dirty && !$v.newWorker.age.required" class="danger">This field is required</span>
-                    <span v-if="$v.newWorker.age.$dirty && !$v.newWorker.age.isDate && $v.newWorker.age.required" class="danger">Enter a valid birthday DD.MM.YYYY</span>
+                    <span v-if="$v.newWorker.Age.$dirty && !$v.newWorker.Age.required" class="danger">This field is required</span>
+                    <span v-if="$v.newWorker.Age.$dirty && !$v.newWorker.Age.isDate && $v.newWorker.Age.required" class="danger">Enter a valid birthday DD.MM.YYYY</span>
 
                 </div>
                 <div class="input-field col s12 m6">
-                    <select v-model="newWorker.sex">
+                    <select v-model="newWorker.Sex">
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                     </select>
@@ -35,19 +35,34 @@
                 </div>
 
                 <div class="input-field col s12 m6">
-                    <select v-model="newWorker.firm">
-                        <option :value="firm.Name" v-for="(firm, index) in firms" v-if="firm.Active === 1" :key="index">{{ firm.Name }}</option>
+                    <select v-model="newWorker.Firm">
+                        <option :value="firmNone">None</option>
+                        <option :value="firm" v-for="(firm, index) in firms" v-if="firm.Active === 1" :key="index">{{ firm.Name }}</option>
                     </select>
                     <label>Firm</label>
                 </div>
 
-                <div class="input-field col s12 m6">
-                    <input @change="saveStartDate(newWorker.start)" type="text" class="datepicker" id="worker_start">
-                    <label for="worker_start" class="">Start</label>
+                <div class="input-field col s6 m6">
+                    <input v-model.lazy="newWorker.startDate"
+                           :class="{ invalid: $v.newWorker.startDate.$error, valid: !$v.newWorker.startDate.$invalid }"
+                           id="worker_start"
+                           type="text"
+                           class="validate">
+                    <label for="worker_start">Start</label>
+                    <span v-if="$v.newWorker.startDate.$dirty && !$v.newWorker.startDate.required" class="danger">This field is required</span>
+                    <span v-if="$v.newWorker.startDate.$dirty && !$v.newWorker.startDate.isDate && $v.newWorker.startDate.required" class="danger">Enter a valid date DD.MM.YYYY</span>
+
                 </div>
-                <div class="input-field col s12 m6">
-                    <input @change="saveEndDate()" type="text" class="datepicker"  id="worker_end">
-                    <label for="worker_end" class="">End</label>
+                <div class="input-field col s6 m6">
+                    <input v-model.lazy="newWorker.endDate"
+                           :class="{ invalid: $v.newWorker.endDate.$error }"
+                           id="worker_end"
+                           class="validate"
+                           type="text">
+                    <label for="worker_end">End</label>
+                    <span v-if="$v.newWorker.endDate.$dirty && !$v.newWorker.endDate.isDate" class="danger">Enter a valid date DD.MM.YYYY</span>
+                    <span v-if="$v.newWorker.endDate.$dirty && $v.newWorker.endDate.isDate && $v.newWorker.startDate.required && !$v.newWorker.endDate.minDate" class="danger">Enter a valid end date</span>
+
                 </div>
                 <div class="input-field col s12 m6">
                     <select v-model="newWorker.Active">
@@ -80,29 +95,70 @@
     data (){
       return {
         newWorker: {
-          name: '',
-          age: '',
-          sex: '',
-          firm: '',
-          start: '',
-          startFormated: '',
-          end: '',
-          endFormated: '',
+          Name: '',
+          Age: '',
+          Sex: 'Male',
+          Firm: {
+            Name: 'None',
+            Id: null,
+          },
+          Start: null,
+          startDate: '',
+          End: null,
+          endDate: '',
           Active: 1
         },
-        firms: []
+        firms: [],
+        firmNone:{
+          Name: 'None',
+          Id: null
+        }
       }
     },
     validations:{
       newWorker: {
-        name: {
+        Name: {
           required
         },
-        age: {
+        Age: {
           required,
           isDate(value){
             return isDate(value)
           }
+        },
+        startDate: {
+          required,
+          isDate(value){
+            return isDate(value)
+          }
+        },
+        endDate: {
+          minDate(){
+            if(this.newWorker.Start && this.newWorker.End){
+              return this.newWorker.Start < this.newWorker.End
+            } else {
+              return true
+            }
+          },
+          isDate(value){
+            if(value ===''){
+              return true
+            } else {
+              return isDate(value)
+            }
+          }
+        }
+      }
+    },
+    watch: {
+      'newWorker.startDate'(value){
+        this.newWorker.Start = window.moment(value, "DD.MM.YYYY").valueOf();
+      },
+      'newWorker.endDate'(value){
+        if(value) {
+          this.newWorker.End = window.moment(value, "DD.MM.YYYY").valueOf();
+        } else {
+          this.newWorker.End = null;
         }
       }
     },
@@ -126,47 +182,13 @@
       },
       materializeInit(){
         /* eslint-disable */
-        // Initialize materialize elements
         (function($){
           $(function(){
 
             $('select').formSelect();
-            $('.datepicker').datepicker({
-              format: 'dd.mm.yyyy',
-              autoClose: true
-            });
 
-          }); // end of document ready
-        })(jQuery); // end of jQuery name space
-        /* eslint-enable */
-      },
-      saveStartDate(){
-        let vm = this;
-
-        /* eslint-disable */
-        (function($){
-          vm.newWorker.startFormated = $('#worker_start').val();
-          let parts = vm.newWorker.startFormated.split('.');
-
-          vm.newWorker.start = new Date(parts[2], parts[1] - 1, parts[0]);
-
-          $('#worker_end').datepicker({
-            minDate: vm.newWorker.start,
-            format: 'dd.mm.yyyy',
-            autoClose: true
           });
-        })(jQuery); // end of jQuery name space
-        /* eslint-enable */
-
-      },
-      saveEndDate(){
-        let vm = this;
-        /* eslint-disable */
-        (function($){
-          vm.newWorker.endFormated = $('#worker_start').val();
-          let parts = vm.newWorker.endFormated.split('.');
-          vm.newWorker.end = new Date(parts[2], parts[1] - 1, parts[0]);
-        })(jQuery); // end of jQuery name space
+        })(jQuery);
         /* eslint-enable */
       }
     }

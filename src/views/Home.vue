@@ -26,7 +26,7 @@
 
                 <form class="filter-form"
                       v-show="filterBy.Field !== 'None'"
-                      @submit.prevent="validateFilter; if(validateFilterCheck){fetchWorkersFilter(1); $v.filterBy.$reset()}">
+                      @submit.prevent="validateFilter; if(validateFilterCheck){fetchWorkersFilter(1); resetFilterValidation()}">
 
                     <div  v-show="filterBy.Field === 'Name'" class="input-field col s6 m6">
                         <input v-model="filterBy.Name" id="worker_name" type="text" class="validate" :class="{ invalid: $v.filterBy.Name.$dirty }" placeholder="Name">
@@ -34,21 +34,21 @@
                     </div>
                     <div v-show="filterBy.Field === 'Firm'" class="input-field col s12 m6">
                         <select v-model="filterBy.Firm">
-                            <option value="" selected disabled>Chose Firm</option>
+                            <option value="None" selected>None</option>
                             <option :value="firm.Name" v-for="(firm, index) in firms" v-if="firm.Active === 1" :key="index">{{ firm.Name }}</option>
                         </select>
-                        <span class="field-error danger" v-if="$v.filterBy.Firm.$dirty">Field is required</span>
                     </div>
 
                     <div v-show="filterBy.Field === 'Date'" class="filter-form__date">
                         <div  class="input-field col s12 m6">
-                            <input @change="saveStartDate()" type="text" class="datepicker" id="worker_start">
+                            <input v-model.lazy="filterBy.Date.StartDate" class="date-filter" type="text" id="worker_start">
                             <label for="worker_start" class="">Start</label>
                         </div>
                         <div class="input-field col s12 m6">
-                            <input @change="saveEndDate()" type="text" class="datepicker"  id="worker_end">
+                            <input v-model.lazy="filterBy.Date.EndDate" class="date-filter" type="text"  id="worker_end">
                             <label for="worker_end" class="">End</label>
                         </div>
+                        <span class="danger" v-if="!this.$v.filterBy.Date.Start.required && !this.$v.filterBy.Date.End.required && this.$v.filterBy.Date.$dirty">Please enter date to filter</span>
                     </div>
 
 
@@ -93,12 +93,12 @@
                     <td>{{ worker.Age | ageFromBirth }}</td>
                     <td>{{ worker.Sex }}</td>
                     <td>{{ worker.Firm }}</td>
-                    <td>{{ worker.Start }}</td>
-                    <td>{{ worker.End }}</td>
+                    <td>{{ worker.Start | dateFormatter }}</td>
+                    <td>{{ worker.End | dateFormatter }}</td>
                     <td class="active" v-if="worker.Active === 1">active</td>
                     <td class="inactive" v-if="worker.Active === 0">inactive</td>
                     <td>
-                        <router-link to="/edit/worker" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
+                        <router-link :to="{ name: 'editworker', params: { id: worker.Id, worker: worker } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
                         <modal @submit="deleteWorker(worker)" submit-btn="Delete">
                             <i class="danger far fa-trash-alt"></i>
                             <div slot="popup-text">Do you want to delete this worker?</div>
@@ -157,12 +157,14 @@
         filterBy:{
           Field: 'None',
           Name:'',
-          Firm: '',
-          Start: '',
-          StartFormated: '',
-          End: '',
-          EndFormated: '',
-          Active: ''
+          Firm: 'None',
+          Active: '',
+          Date: {
+            Start: '',
+            StartDate: '',
+            End: '',
+            EndDate: ''
+          }
         },
         pagination: {
           totalItems: 0,
@@ -176,8 +178,33 @@
         Name:{
           required
         },
-        Firm:{
-          required
+        Date: {
+          Start: {
+            required
+          },
+          End: {
+            required
+          }
+        }
+      }
+    },
+    watch: {
+      activeFilter(){
+        this.filterBy.Active = this.activeFilter;
+        this.activeFilterChanged(1);
+      },
+      'filterBy.Date.StartDate'(value){
+        if(value) {
+          this.filterBy.Date.Start = window.moment(value, 'DD.MM.YYYY').valueOf()
+        } else {
+          this.filterBy.Date.Start = ''
+        }
+      },
+      'filterBy.Date.EndDate'(value){
+        if(value) {
+          this.filterBy.Date.End = window.moment(value, 'DD.MM.YYYY').valueOf()
+        }else {
+          this.filterBy.Date.End = ''
         }
       }
     },
@@ -218,21 +245,17 @@
       validateFilter(){
         if(this.filterBy.Field === 'Name') {
           return this.$v.filterBy.Name.$touch();
-        } else if(this.filterBy.Field === 'Firm') {
-          return this.$v.filterBy.Firm.$touch();
         } else if(this.filterBy.Field === 'Date') {
-          // return this.$v.filterBy.Date.$touch();
-          return 0
+          return this.$v.filterBy.Date.$touch();
         }
       },
       validateFilterCheck(){
         if(this.filterBy.Field === 'Name') {
           return !this.$v.filterBy.Name.$invalid;
         } else if(this.filterBy.Field === 'Firm') {
-          return !this.$v.filterBy.Firm.$invalid;
+          return true;
         } else if(this.filterBy.Field === 'Date') {
-          // return !this.$v.filterBy.Date.$invalid;
-          return 0
+          return this.$v.filterBy.Date.Start.required || this.$v.filterBy.Date.End.required
         }
       },
 
@@ -289,49 +312,18 @@
           $(function(){
 
             $('select').formSelect();
-            $('.datepicker').datepicker({
-              format: 'dd.mm.yyyy',
-              autoClose: true
-            });
 
           }); // end of document ready
         })(jQuery); // end of jQuery name space
         /* eslint-enable */
       },
-      saveStartDate(){
-        let vm = this;
-
-        /* eslint-disable */
-        (function($){
-          vm.filterBy.StartFormated = $('#worker_start').val();
-          let parts = vm.filterBy.StartFormated.split('.');
-
-          vm.filterBy.Start = new Date(parts[2], parts[1] - 1, parts[0]);
-
-          $('#worker_end').datepicker({
-            minDate: vm.filterBy.Start,
-            format: 'dd.mm.yyyy',
-            autoClose: true
-          });
-        })(jQuery); // end of jQuery name space
-        /* eslint-enable */
-
-      },
-      saveEndDate(){
-        let vm = this;
-        /* eslint-disable */
-        (function($){
-          vm.filterBy.EndFormated = $('#worker_start').val();
-          let parts = vm.filterBy.EndFormated.split('.');
-          vm.filterBy.End = new Date(parts[2], parts[1] - 1, parts[0]);
-        })(jQuery); // end of jQuery name space
-        /* eslint-enable */
-      },
       clearFilter(){
         this.filterBy.Name = '';
-        this.filterBy.Firm= '';
+        this.filterBy.Firm= 'None';
         this.filterBy.Start= '';
         this.filterBy.End= '';
+        this.filterBy.Date.StartDate = '';
+        this.filterBy.Date.EndDate = '';
         this.pagination.currentPage = 1;
         this.$v.filterBy.$reset();
         this.workers.splice(0, this.workers.length);
@@ -340,6 +332,11 @@
       indexOffset(index){
         return this.pagination.currentPage * this.pagination.perPage - this.pagination.perPage + index + 1;
       },
+      resetFilterValidation(){
+        this.$v.filterBy.Name.$reset();
+        this.$v.filterBy.Firm.$reset();
+        this.$v.filterBy.Date.$reset()
+      }
 
     },
     filters:{
@@ -348,13 +345,14 @@
         let birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
         let ageDate = new Date(Date.now() - birthDate.getTime());
         return Math.abs(ageDate.getFullYear() - 1970);
+      },
+      dateFormatter(value){
+        if(value !== 'null') {
+          return window.moment(parseInt(value)).format('DD.MM.YYYY')
+        } else {
+          return ''
+        }
       }
     },
-    watch:{
-      activeFilter(){
-        this.filterBy.Active = this.activeFilter;
-        this.activeFilterChanged(1);
-      }
-    }
   }
 </script>

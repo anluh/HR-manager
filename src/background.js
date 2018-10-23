@@ -79,6 +79,9 @@ app.on('ready', async () => {
 
 // ================= API functionality =================
 
+process.setMaxListeners(100);
+
+
 let sqlite3 = require('sqlite3').verbose();
 let db = new sqlite3.Database('./database.sqlite')
 
@@ -103,14 +106,23 @@ ipcMain.on("printWorkers", (event, arg) => {
 ipcMain.on("printWorkersFilter", (event, arg) => {
   let pageOffset = arg.pagination.currentPage * arg.pagination.perPage - arg.pagination.perPage;
   let filter = {};
+  let dateFilter = '';
 
-  if(arg.filterBy.Name){
+  if(arg.filterBy.Field === 'Name'){
     filter.key =  'Name';
     filter.value = arg.filterBy.Name;
 
-  } else if (arg.filterBy.Firm){
+  } else if (arg.filterBy.Field === 'Firm'){
     filter.key =  'Firm';
     filter.value = arg.filterBy.Firm;
+  } else if (arg.filterBy.Field === 'Date') {
+    if (arg.filterBy.Date.Start && !arg.filterBy.Date.End) {
+      dateFilter = `Start >= ${arg.filterBy.Date.Start}`
+    } else if (!arg.filterBy.Date.Start && arg.filterBy.Date.End) {
+      dateFilter = `End <= ${arg.filterBy.Date.End}`
+    } else if (arg.filterBy.Date.Start || arg.filterBy.Date.End) {
+      dateFilter = `Start >= ${arg.filterBy.Date.Start} AND End <= ${arg.filterBy.Date.End}`
+    }
   }
 
   if(filter.key) {
@@ -137,6 +149,36 @@ ipcMain.on("printWorkersFilter", (event, arg) => {
           totalItems = rows['count(*)'];
         });
         db.each(`SELECT * FROM Workers WHERE ${filter.key} = '${filter.value}' LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+          let response = {};
+          response.totalItems = totalItems;
+          response.rows = rows;
+          mainWindow.webContents.send("printWorkersFilter:res", response);
+        })
+      });
+    }
+  }
+
+  if(dateFilter){
+    if(arg.filterBy.Active){
+      db.serialize(function () {
+        let totalItems = 0;
+        db.each(`SELECT count(*) FROM Workers WHERE ${dateFilter} AND Active = ${parseInt(arg.filterBy.Active)}`, (err, rows) => {
+          totalItems = rows['count(*)'];
+        });
+        db.each(`SELECT * FROM Workers WHERE ${dateFilter} AND Active = ${parseInt(arg.filterBy.Active)} LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+          let response = {};
+          response.totalItems = totalItems;
+          response.rows = rows;
+          mainWindow.webContents.send("printWorkersFilter:res", response);
+        })
+      });
+    } else {
+      db.serialize(function () {
+        let totalItems = 0;
+        db.each(`SELECT count(*) FROM Workers WHERE ${dateFilter}`, (err, rows) => {
+          totalItems = rows['count(*)'];
+        });
+        db.each(`SELECT * FROM Workers WHERE ${dateFilter} LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
           let response = {};
           response.totalItems = totalItems;
           response.rows = rows;
@@ -178,7 +220,7 @@ ipcMain.on("printFirms", function() {
 // Add new worker
 ipcMain.on("add-worker", function (event, arg){
   db.serialize(function () {
-    db.run(`INSERT into Workers (Name, Age, Sex, Firm, Start, End, Active) values('${arg.name}', '${arg.age}', '${arg.sex}', '${arg.firm}', '${arg.startFormated}', '${arg.endFormated}', ${parseInt(arg.Active)})`, function(err){
+    db.run(`INSERT into Workers (Name, Age, Sex, Firm, Firm_id, Start, End, Active) values('${arg.Name}', '${arg.Age}', '${arg.Sex}', '${arg.Firm.Name}', ${arg.Firm.Id}, '${arg.Start}', '${arg.End}', ${parseInt(arg.Active)})`, function(err){
       if(err){
         // event.returnValue = err
         console.log(err)
@@ -206,7 +248,7 @@ ipcMain.on("delete-worker", function (event, arg) {
 // Add new firm
 ipcMain.on("add-firm", function (event, arg){
   db.serialize(function () {
-    db.run(`INSERT into Firms (Name, Address, Active) values('${arg.name}', '${arg.address}', ${parseInt(arg.active)})`, function(err){
+    db.run(`INSERT into Firms (Name, Address, Active) values('${arg.Name}', '${arg.Address}', ${parseInt(arg.Active)})`, function(err){
       if(err){
         console.log(err);
         event.returnValue = err
@@ -222,7 +264,7 @@ ipcMain.on("delete-firm", function (event, arg) {
   db.serialize(function () {
     // Before delete firm, check if there are workers on this firm
     let check = null;
-    db.each(`SELECT count(*) FROM Workers WHERE Firm = '${arg.Name}'`, (err, rows) => {
+    db.each(`SELECT count(*) FROM Workers WHERE Firm_id = '${arg.Id}'`, (err, rows) => {
       check = rows['count(*)'];
 
       if(check === 0) {
@@ -238,5 +280,45 @@ ipcMain.on("delete-firm", function (event, arg) {
         event.returnValue = 'err_workers'
       }
     });
+  });
+});
+
+ipcMain.on("edit-firm", function(event, arg) {
+  let errors = [];
+  let check = null;
+
+  // Check if there are workers on the firm before change firm status to inactive
+  db.each(`SELECT count(*) FROM Workers WHERE Firm_id = ${arg.Id}`, (err, rows) => {
+    check = rows['count(*)'];
+
+    if (check > 0 && parseInt(arg.Active) === 0) {
+      errors.push('workers_err');
+
+    } else {
+      db.run(`UPDATE Firms SET Name='${arg.Name}', Address='${arg.Address}', Active=${parseInt(arg.Active)} WHERE Id=${parseInt(arg.Id)}`, (err) => {
+        if (err) {
+          errors.push(err);
+        }
+      });
+      db.run(`UPDATE Workers SET Firm='${arg.Name}' WHERE Firm_id=${parseInt(arg.Id)}`, (err) => {
+        if (err) {
+          errors.push(err);
+        }
+      });
+    }
+
+    errors.length > 0 ? event.returnValue = false : event.returnValue = true;
+  });
+
+});
+
+ipcMain.on("edit-worker", (event, arg) => {
+  db.run(`UPDATE Workers SET Name='${arg.Name}', Age='${arg.Age}', Sex='${arg.Sex}', Firm='${arg.Firm.Name}', Firm_id=${arg.Firm.Id}, Start='${arg.Start}', End='${arg.End}', Active=${parseInt(arg.Active)} WHERE Id=${parseInt(arg.Id)}`, (err) => {
+    if (err) {
+      console.log(err)
+      event.returnValue = false
+    } else {
+      event.returnValue = true
+    }
   });
 });

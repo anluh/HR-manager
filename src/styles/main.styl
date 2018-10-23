@@ -60,7 +60,7 @@ body
     button
       margin-left: 20px
       min-width: 100px
-.firms .toast
+.firms .toast, .edit-firm .toast
   position: absolute
   width: 96%
   left: 2%
@@ -222,11 +222,15 @@ body
 
   input[type='text']:not(.select-dropdown.dropdown-trigger)
     width: 200px
-  input[type='text'].datepicker
+  input[type='text'].date-filter
     width: 120px
 
   &__date
     display: flex
+    align-items: center
+
+    .danger
+      margin-left: 20px
 
     .input-field
       margin-left: 25px

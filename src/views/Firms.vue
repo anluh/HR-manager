@@ -31,7 +31,7 @@
                     <td class="active" v-if="firm.Active === 1">active</td>
                     <td class="inactive" v-if="firm.Active === 0">inactive</td>
                     <td>
-                        <router-link to="/edit/worker" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
+                        <router-link :to="{ name: 'editfirm', params: { id: firm.Id, firm: firm } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
                         <modal @submit="deleteFirm(firm)" submit-btn="Delete">
                             <i class="danger far fa-trash-alt"></i>
                             <div slot="popup-text">Do you want to delete this firm?</div>
