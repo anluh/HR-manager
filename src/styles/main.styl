@@ -1,0 +1,273 @@
+body
+  margin 0
+
+#app
+  font-family: 'Avenir', Helvetica, Arial, sans-serif
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+  text-align: center
+  color: #2c3e50
+
+.modal-wrapper
+  display: inline-block
+
+.fade-enter-active, .fade-leave-active
+  transition: opacity .3s
+
+.fade-enter, .fade-leave-to
+  opacity: 0
+
+.slide-fade-enter-active
+  transition: all .3s ease
+
+.slide-fade-leave-active
+  transition: all .6s cubic-bezier(1.0, 0.5, 0.8, 1.0)
+
+.slide-fade-enter
+  transform: translateY(10px)
+  opacity: 0
+.slide-fade-leave-to
+  transform: translateY(-10px)
+  opacity: 0
+
+.popup
+  position: fixed
+  width: 500px
+  padding 30px 40px 20px
+  background-color #fff
+  left: 50%
+  top: 50%
+  z-index: 3
+  transform: translate(-50%, -50%)
+
+  &__cover
+    background rgba(0,0,0,0.3)
+    position: fixed
+    width: 100%
+    height: 100%
+    top: 0
+    left: 0
+    z-index: 2
+
+  &__title
+    margin-bottom: 40px
+
+  &__header
+    text-transform: uppercase
+
+  &__buttons
+    text-align right
+    button
+      margin-left: 20px
+      min-width: 100px
+.firms .toast, .edit-firm .toast
+  position: absolute
+  width: 96%
+  left: 2%
+  top: 120px
+
+  &.toast--error
+    background $red-lighten
+
+//Left Navbar Styles
+#nav
+  background: #27374b
+  position: fixed
+  top: 0
+  left: 0
+  width: 20%
+  height: 100%
+  text-align left
+  max-width: 20%
+  transition: max-width .2s ease-in-out
+
+.collapsed #nav
+  max-width: 65px
+  .toogle-menu i
+    transform rotate(-90deg)
+  .nav__item span
+    max-width: 0
+
+#nav a
+  font-weight: bold
+  color: #a7bbcb
+  text-decoration: none
+
+  &.toogle-menu
+    font-size: 20px
+    margin: 25px 17px
+    display: block
+
+    i
+      cursor: pointer
+      transform rotate(90deg)
+      transition: all .2s ease-in-out
+
+  .nav__item
+    padding 20px 20px
+    text-align: left
+    background #2e3f57
+    display: flex
+    align-items: center
+
+    i
+      margin-right: 10px
+      width: 15px
+      text-align center
+    span
+      max-width: 400px
+      overflow-x: hidden
+      transition: all .2s ease-in-out
+      display: inline-block
+
+
+#nav a.router-link-exact-active
+  color: #fff
+
+  .nav__item
+    background #3c5068
+
+//Right Block styles
+
+#router-view
+  margin-left: 20%
+  transition: margin-left .2s ease-in-out
+.collapsed #router-view
+  margin-left: 65px
+
+.view-wrapper
+  padding: 20px 30px
+  text-align left
+
+.page-title
+  height: 120px
+  background: $main-light
+  color: #FFF
+  display: flex
+  align-items: center
+  justify-content: center
+  margin-bottom: 50px
+
+.home
+  text-align left
+
+.datepicker-footer
+  display: none
+.add-worker-btn
+  margin-bottom: 20px
+.worker-btn
+  width: 35px
+  padding: 0
+  background transparent
+  border: none
+  cursor: pointer
+  &:focus
+    background: none
+  i
+    font-size: 14px
+    color: alpha($main-color, .9)
+    transition: all .2s ease-in-out
+
+    &.danger:hover
+      color: $red
+  i:hover
+    color: $main-light
+.table-list
+  border: none
+  border-collapse: collapse;
+
+  td.active
+    color: $success
+  td.inactive
+    color: $red
+  td
+    min-width 100px
+    //text-align: center
+  td.num
+    min-width: 35px
+    text-align: center
+
+.form-btns
+  margin-top: 40px
+
+.worker-list
+  tbody
+    tr
+      transition all .2s ease-in-out
+      cursor: pointer
+
+      &:hover
+        background-color alpha(#26a69a, .2)!important
+
+//Add worker
+
+.add-worker
+  .form-btns>*
+    width: 100px
+
+
+// Filter
+.filter-wrapper
+  display: flex
+  justify-content: space-between
+
+.filter-by
+  .select-wrapper
+    display: inline-block
+    width: 65px
+    margin-left: 15px
+    margin-right: 15px
+    .caret
+      top: -7px
+
+  .select-dropdown
+    border-bottom: none!important
+
+.activity-filter
+  label
+    display: block
+    margin-left: 40px
+
+.filter-form
+  display: flex
+  flex 1
+  align-items: center
+  justify-content: space-between
+
+  input[type='text']:not(.select-dropdown.dropdown-trigger)
+    width: 200px
+  input[type='text'].date-filter
+    width: 120px
+
+  &__date
+    display: flex
+    align-items: center
+
+    .danger
+      margin-left: 20px
+
+    .input-field
+      margin-left: 25px
+
+  .filter-form__submit
+    margin-left: 15px
+    i
+      font-size: 14px
+      margin-right: 5px
+
+//Pagination
+.pagination-section
+  display: flex
+  justify-content: space-between
+  margin-top: 20px
+
+.items-per-page
+  .input-field
+    display: inline-block
+    width: 50px
+    margin-left: 10px
+    input
+      height: 30px
+
+.pagination>*
+  margin: 0 10px
