@@ -72,7 +72,11 @@
 
             </div>
 
+<<<<<<< HEAD
             <table class="striped table-list worker-list" cellspacing="0" cellpadding="0">
+=======
+            <table class="striped table-list">
+>>>>>>> 8f2f2640607e914683b70b0e458d9d6115cfedc0
                 <thead>
                 <tr>
                     <th>№</th>
@@ -88,6 +92,7 @@
 
                 <tbody>
                 <tr v-for="(worker, index) in workers" :key="index">
+<<<<<<< HEAD
                     <td @click="workerInfo(worker)" class="num">{{ indexOffset(index) }}</td>
                     <td @click="workerInfo(worker)">{{ worker.Name }}</td>
                     <td @click="workerInfo(worker)">{{ worker.Age | ageFromBirth }}</td>
@@ -99,6 +104,19 @@
                     <td @click="workerInfo(worker)" class="inactive" v-if="worker.Active === 0">inactive</td>
                     <td>
                         <router-link @click.stop :to="{ name: 'editworker', params: { id: worker.Id, worker: worker } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
+=======
+                    <td class="num">{{ indexOffset(index) }}</td>
+                    <td>{{ worker.Name }}</td>
+                    <td>{{ worker.Age | ageFromBirth }}</td>
+                    <td>{{ worker.Sex }}</td>
+                    <td>{{ worker.Firm }}</td>
+                    <td>{{ worker.Start | dateFormatter }}</td>
+                    <td>{{ worker.End | dateFormatter }}</td>
+                    <td class="active" v-if="worker.Active === 1">active</td>
+                    <td class="inactive" v-if="worker.Active === 0">inactive</td>
+                    <td>
+                        <router-link :to="{ name: 'editworker', params: { id: worker.Id, worker: worker } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
+>>>>>>> 8f2f2640607e914683b70b0e458d9d6115cfedc0
                         <modal @submit="deleteWorker(worker)" submit-btn="Delete">
                             <i class="danger far fa-trash-alt"></i>
                             <div slot="popup-text">Do you want to delete this worker?</div>
@@ -137,7 +155,10 @@
   // @ is an alias to /src
   import modal from '@/components/modal.vue'
   import pagination from '@/components/pagination.vue'
+<<<<<<< HEAD
   import router from '../router'
+=======
+>>>>>>> 8f2f2640607e914683b70b0e458d9d6115cfedc0
   import { required } from 'vuelidate/lib/validators'
 
   const electron = require('electron');
@@ -337,9 +358,12 @@
         this.$v.filterBy.Name.$reset();
         this.$v.filterBy.Firm.$reset();
         this.$v.filterBy.Date.$reset()
+<<<<<<< HEAD
       },
       workerInfo(worker){
         router.push({ name: "workerinfo", params: { id: worker.Id, worker: worker } })
+=======
+>>>>>>> 8f2f2640607e914683b70b0e458d9d6115cfedc0
       }
 
     },
