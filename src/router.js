@@ -68,6 +68,38 @@ export default new Router({
       // this generates a separate chunk (about.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('./views/Salary.vue')
-    }
+    },
+    {
+      path: '/history/edit/:id',
+      name: 'edithours',
+      // route level code-splitting
+      // this generates a separate chunk (about.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('./views/EditHours.vue')
+    },
+    {
+      path: '/deposit',
+      name: 'deposit',
+      // route level code-splitting
+      // this generates a separate chunk (about.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('./views/Deposit.vue')
+    },
+    {
+      path: '/deposit/edit/:id',
+      name: 'editdeposit',
+      // route level code-splitting
+      // this generates a separate chunk (about.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('./views/EditDeposit.vue')
+    },
+    {
+      path: '/report',
+      name: 'report',
+      // route level code-splitting
+      // this generates a separate chunk (about.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('./views/Report.vue')
+    },
   ]
 })

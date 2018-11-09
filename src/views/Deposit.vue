@@ -1,0 +1,177 @@
+<template>
+    <div class="deposit">
+        <div class="page-title">
+            <h3>Deposit</h3>
+        </div>
+
+        <div class="salary__wrapper">
+
+            <form class="add-deposit" @submit.prevent="$v.newDeposit.$touch(); $v.date.$touch(); if(!$v.newDeposit.$invalid){saveDeposit(); $v.newDeposit.$reset(); $v.date.$reset()}">
+                <div class="input-field">
+                    <autocomplete :options="workers" v-model="newDeposit.Worker"></autocomplete>
+                    <span class="error danger" v-show="$v.newDeposit.$dirty && !$v.newDeposit.Worker.Name.required">This field is required</span>
+                </div>
+                <div class="input-field">
+                    <input id="add-deposit__date"
+                           v-model.lazy="date"
+                           :class="{ invalid: !$v.date.isDate && $v.date.required, valid: $v.date.isDate && $v.date.required }"
+                           type="text">
+                    <label for="add-deposit__date">Date</label>
+                    <span class="error danger" v-show="$v.date.$dirty && !$v.date.required">This field is required</span>
+                    <span class="error danger" v-show="!$v.date.isDate && $v.date.required">Enter valid date DD.MM.YYYY</span>
+                </div>
+                <div class="input-field">
+                    <input id="add-deposit__hours" v-model="newDeposit.Money" type="text">
+                    <label for="add-deposit__hours">Money</label>
+                    <span class="error danger" v-show="$v.newDeposit.$dirty && !$v.newDeposit.Money.required">This field is required</span>
+                    <span class="error danger" v-show="$v.newDeposit.$dirty && $v.newDeposit.Money.required && !$v.newDeposit.Money.decimal">Enter valid hours</span>
+                </div>
+
+                <button class="waves-effect waves-light btn">Save</button>
+            </form>
+
+            <div class="history-wrapper">
+                <table class="striped table-list" cellspacing="0" cellpadding="0">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Date</th>
+                        <th>Money</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr v-for="(history, index) in historys" :key="index">
+                        <td>{{ history.Worker_name }}</td>
+                        <td>{{ history.Date | dateFormatter}}</td>
+                        <td>{{ history.Money }}</td>
+                        <td>
+                            <router-link @click.stop :to="{ name: 'editdeposit', params: { id: history.Id, deposit: history } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
+                            <modal @submit="deleteHistory(history)" submit-btn="Delete">
+                                <i class="danger far fa-trash-alt"></i>
+                                <div slot="popup-text">Do you want to delete this deposit?</div>
+                            </modal>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+</template>
+
+<script>
+  import autocomplete from "../components/autocomplete"
+  import moment from 'moment';
+  const {ipcRenderer} = require('electron');
+  import { required, decimal } from 'vuelidate/lib/validators'
+  import modal from '@/components/modal.vue'
+
+
+  const isDate = (value) => moment(value, 'DD.MM.YYYY', true).isValid();
+
+  export default {
+    name: "deposit",
+    components: {
+      autocomplete,
+      modal
+    },
+    data() {
+      return {
+        workers: [],
+        historys: [],
+        date: '',
+        newDeposit: {
+          Worker: {
+            Id: null,
+            Name: ''
+          },
+        },
+        selected: null
+      }
+    },
+    validations: {
+      date:{
+        required,
+        isDate(value){
+          return isDate(value)
+        },
+      },
+      newDeposit: {
+        Worker: {
+          Name: {
+            required
+          }
+        },
+        Money: {
+          required,
+          decimal
+        }
+      }
+    },
+    watch: {
+      date(value) {
+        if(value){
+          this.newDeposit.Date = moment(value, 'DD.MM.YYYY').valueOf();
+        } else {
+          this.newDeposit.Date = ''
+        }
+      }
+    },
+    created() {
+      let workers = this.workers;
+      let historys = this.historys;
+
+      this.fetchAutocompleteWorkersDeposit();
+      ipcRenderer.on("autocompleteWorkersDeposit:res", function (evt, result) {
+        workers.push(result);
+      });
+
+      this.fetchDepositHistory();
+      ipcRenderer.on("fetchDepositHistory:res", function (evt, result) {
+        historys.push(result);
+      });
+    },
+    methods: {
+      saveDeposit(){
+        if(ipcRenderer.sendSync("add-deposit", this.newDeposit)){
+          this.fetchDepositHistory();
+          this.newDeposit.Worker.Name='';
+          this.newDeposit.Worker.Id='';
+          this.date='';
+          this.newDeposit.Money = '';
+        }
+      },
+      fetchAutocompleteWorkersDeposit(){
+        this.workers.splice(0, this.workers.length);
+        ipcRenderer.send('autocompleteWorkersDeposit');
+      },
+      fetchDepositHistory(){
+        this.historys.splice(0, this.historys.length);
+        ipcRenderer.send("fetchDepositHistory")
+      },
+      deleteHistory(history){
+        if(ipcRenderer.sendSync('delete-deposit', history.Id)){
+          this.fetchDepositHistory();
+        }
+      }
+    },
+    filters: {
+      dateFormatter(value){
+        return window.moment(parseInt(value)).format('DD.MM.YYYY')
+      }
+    }
+  }
+</script>
+
+<style lang="stylus" scoped>
+    @import "../styles/salary.styl"
+
+    .add-deposit
+        display: flex
+        justify-content: space-between
+        align-items: center
+        margin-bottom: 80px
+</style>
