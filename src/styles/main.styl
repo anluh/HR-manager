@@ -8,6 +8,10 @@ body
   text-align: center
   color: #2c3e50
 
+.page-wrapper
+  padding: 20px 50px 80px
+  background-color #fff
+
 .modal-wrapper
   display: inline-block
 
@@ -60,7 +64,7 @@ body
     button
       margin-left: 20px
       min-width: 100px
-.firms .toast, .edit-firm .toast
+.firms .toast, .edit-firm .toast, .salary .toast
   position: absolute
   width: 96%
   left: 2%
@@ -68,6 +72,11 @@ body
 
   &.toast--error
     background $red-lighten
+
+.error.danger
+  position: absolute
+  left: 0
+  bottom: -20px
 
 //Left Navbar Styles
 #nav

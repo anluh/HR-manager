@@ -1,0 +1,115 @@
+.select-worker
+  text-align left
+
+  &__month
+    width: 200px
+    display: inline-block
+    margin-right: 30px
+
+.disabled
+  pointer-events none
+  opacity: .3
+
+.select-worker__lists
+  margin-top: 40px
+  display: flex
+  text-align: left
+  justify-content: space-around
+
+  .firm-list,
+  .worker-list
+    border: 1px solid $main-color
+    flex-basis: 400px
+
+    .list-wrapper
+      height: 195px
+      overflow: auto
+
+    .title
+      text-align: center
+      background: $main-color
+      color: #fff
+      margin: 0
+      padding: 10px 0
+
+    .list-item:nth-child(odd)
+      background-color: rgba(242,242,242,0.5);
+
+    .list-item
+      padding: 7px 15px
+      font-size: 16px
+      display: flex
+      justify-content: space-between
+      align-items: center
+      cursor: pointer
+      transition: all 0.2s ease-in-out;
+      margin-bottom: 1px
+
+      &.active
+        background-color: $main-light;
+        color: #fff
+
+
+      &:not(.active):hover
+        background-color: rgba(38,166,154,0.2);
+
+.firm-list.selected
+  pointer-events: none
+  .list-item:not(.active)
+    opacity: .3
+
+.worker-list
+  .list-item.active
+    pointer-events none
+
+.report-list
+  margin-top: 40px
+
+.report
+  tbody
+    td:not(:first-child, :last-child)
+      width: 10%
+
+  .rate-td
+    width: 15%
+
+.rate-input
+  margin: 0
+  input
+    height: 2rem
+    max-width 60%
+
+.total-money
+  text-align right
+  margin-right: 30px
+  margin-top: 40px
+
+.print
+  display: none
+
+.report
+  .submit-btns
+    text-align right
+
+    button
+      margin-left: 20px
+      width: 120px
+      margin-top: 20px
+      i
+        margin-right: 10px
+        vertical-align: middle
+
+
+@media print
+  .no-print
+    display: none
+  .print
+    display: block
+
+  .striped.report tbody
+    //tr
+    //  border-top: 1px solid black
+    tr:nth-child(odd)
+      background-color: rgba(242,242,242,0.7)
+      -webkit-print-color-adjust: exact;
+

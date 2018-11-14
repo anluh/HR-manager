@@ -4,6 +4,9 @@ import router from './router'
 import store from './store'
 import moment from 'moment';
 import Vuelidate from 'vuelidate'
+import Print from 'vue-print-nb'
+
+Vue.use(Print);
 Vue.use(Vuelidate)
 window.moment = moment;
 

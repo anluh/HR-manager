@@ -138,8 +138,6 @@
       saveDeposit(){
         if(ipcRenderer.sendSync("add-deposit", this.newDeposit)){
           this.fetchDepositHistory();
-          this.newDeposit.Worker.Name='';
-          this.newDeposit.Worker.Id='';
           this.date='';
           this.newDeposit.Money = '';
         }

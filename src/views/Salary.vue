@@ -4,7 +4,10 @@
             <h3>Salary</h3>
         </div>
 
-        <div class="salary__wrapper">
+        <div class="page-wrapper">
+            <transition name="slide-fade">
+                <div v-if="hoursErr" class="toast toast--error">Hours on this month are already added.</div>
+            </transition>
 
             <div class="input-field add-salary__month">
                 <input id="add-salary__month"
@@ -93,6 +96,7 @@
         workers: [],
         historys: [],
         month: '',
+        hoursErr: 0,
         newSalary: {
           Worker: {
             Id: null,
@@ -165,13 +169,21 @@
     },
     methods: {
       saveSalary(){
-        if(ipcRenderer.sendSync("add-salary", this.newSalary)){
+        let req = ipcRenderer.sendSync("add-salary", this.newSalary);
+        let vm = this;
+
+        if(req === true){
           this.fetchSalaryHistory();
           this.fetchAutocompleteWorkers();
           this.newSalary.Worker.Name='';
           this.newSalary.Worker.Id='';
           this.newSalary.Firm = 'None';
           this.newSalary.Hours = '';
+        } else if(req === 'err_exist'){
+          this.hoursErr = 1;
+          setTimeout(function(){
+            vm.hoursErr = false;
+          }, 8000);
         }
       },
       fetchAutocompleteWorkers(){

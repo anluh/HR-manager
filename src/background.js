@@ -105,8 +105,7 @@ ipcMain.on("printWorkers", (event, arg) => {
 
 ipcMain.on("autocompleteWorkers", (event, arg) => {
   db.serialize(function(){
-    // db.each(`SELECT Id, Name FROM Workers WHERE (${parseInt(arg.MonthStart)} BETWEEN Start AND End) OR (${parseInt(arg.MonthEnd)} BETWEEN Start AND End)`, (err, rows) => {
-    db.each(`SELECT Id, Name FROM Workers WHERE (${parseInt(arg.MonthStart)} > Start OR ${parseInt(arg.MonthEnd)} > Start) AND (${parseInt(arg.MonthStart)} < End) AND Active = 1`, (err, rows) => {
+    db.each(`SELECT Id, Name FROM Workers WHERE (${parseInt(arg.MonthStart)} > Start OR ${parseInt(arg.MonthEnd)} > Start) AND (${parseInt(arg.MonthStart)} < End)`, (err, rows) => {
       mainWindow.webContents.send("autocompleteWorkers:res", rows);
     })
   });
@@ -335,14 +334,23 @@ ipcMain.on("edit-worker", (event, arg) => {
 // ============= Salary API ==============
 ipcMain.on("add-salary", function (event, arg){
   db.serialize(function () {
-    db.run(`INSERT into History (Worker_id, Worker_name, Month, Hours, Firm) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseInt(arg.MonthStart)}, '${arg.Hours}', '${arg.Firm}')`, function(err){
-      if(err){
-        console.log(err);
-        event.returnValue = false;
+    // If hours added to worker in current month -> show err
+    db.each(`SELECT count(*) FROM History WHERE Worker_id=${arg.Worker.Id} AND Firm='${arg.Firm}'`, (err, rows) => {
+      if(rows['count(*)'] > 0){
+        event.returnValue = 'err_exist'
       } else {
-        event.returnValue = true;
+        db.run(`INSERT into History (Worker_id, Worker_name, Month, Hours, Firm) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseInt(arg.MonthStart)}, '${arg.Hours}', '${arg.Firm}')`, function(err){
+          if(err){
+            console.log(err);
+            event.returnValue = false;
+          } else {
+            event.returnValue = true;
+          }
+        });
       }
-    })
+    });
+
+
   });
 });
 
@@ -374,9 +382,16 @@ ipcMain.on("update-hours", (event, arg) => {
 // ========== WorkerInfo API ==========
 ipcMain.on("fetchWorkerInfo", function(event, arg) {
   db.serialize(function(){
-    db.each(`SELECT * FROM History WHERE Worker_id = ${parseInt(arg)} ORDER BY Id DESC`, (err, rows) => {
+    db.each(`SELECT * FROM History WHERE Worker_id = ${parseInt(arg)} ORDER BY Id`, (err, rows) => {
       mainWindow.webContents.send("fetchWorkerInfo:res", rows);
+    });
+    db.each(`SELECT * FROM Deposits WHERE Worker_id = ${parseInt(arg)} ORDER BY Id`, (err, rows) => {
+      mainWindow.webContents.send("fetchWorkerInfoDeposits:res", rows);
+    });
+    db.each(`SELECT * FROM Reports WHERE Worker_id = ${parseInt(arg)} ORDER BY Id`, (err, rows) => {
+      mainWindow.webContents.send("fetchWorkerInfoReports:res", rows);
     })
+
   });
 });
 ipcMain.on("delete-history", function(event, arg) {
@@ -401,16 +416,32 @@ ipcMain.on("autocompleteWorkersDeposit", function() {
   });
 });
 ipcMain.on("add-deposit", function (event, arg){
+  let errors = [];
+
   db.serialize(function () {
     db.run(`INSERT into Deposits (Worker_id, Worker_name, Date, Money) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseInt(arg.Date)}, ${parseInt(arg.Money)})`, function(err){
       if(err){
         console.log(err);
-        event.returnValue = false;
-      } else {
-        event.returnValue = true;
+        errors.push(err)
       }
     })
   });
+  // Update current worker deposit
+  db.each(`SELECT Deposit FROM Workers WHERE Id=${parseInt(arg.Worker.Id)}`, (err, rows) => {
+    let deposit = rows['Deposit'];
+
+    deposit ? deposit += parseInt(arg.Money) : deposit = parseInt(arg.Money);
+
+    db.run(`UPDATE Workers SET Deposit=${deposit} WHERE Id=${parseInt(arg.Worker.Id)}`, (err) => {
+      if (err) {
+        console.log(err);
+        errors.push(err);
+      }
+    });
+  });
+
+  errors.length > 0 ? event.returnValue = false : event.returnValue = true;
+
 });
 ipcMain.on("fetchDepositHistory", function() {
   db.serialize(function(){
@@ -439,5 +470,40 @@ ipcMain.on("update-deposit", (event, arg) => {
     } else {
       event.returnValue = true
     }
+  });
+});
+
+// ========== Report API ==========
+
+ipcMain.on("reportFetchWorkers", function(event, arg) {
+  db.serialize(function(){
+    db.each(`SELECT * FROM History WHERE Firm='${arg.Firm}' AND Month=${parseInt(arg.Month)} ORDER BY Worker_name`, (err, rows) => {
+      mainWindow.webContents.send("reportFetchWorkers:res", rows);
+    })
+  });
+});
+
+ipcMain.on("reportWorkerData", function(event, arg) {
+  db.serialize(function(){
+    db.each(`SELECT History.Id, Worker_id, Worker_name, Month, Hours, History.Firm, Deposit, Rate FROM History INNER JOIN Workers on History.Worker_id=Workers.Id WHERE Workers.Id=${parseInt(arg.Worker_id)} AND History.Month=${parseInt(arg.Month)} AND History.Firm='${arg.Firm}'`, (err, rows) => {
+      mainWindow.webContents.send("reportWorkerData:res", rows);
+    })
+  });
+});
+
+ipcMain.on("saveReport", function (event, arg){
+  db.serialize(function () {
+    db.run(`INSERT into Reports (Worker_name, Worker_id, Firm, Month, Rate, Hours, Salary, Insurance, Deposit, Total) values('${arg.Worker_name}', '${arg.Worker_id}', '${arg.Firm}', ${parseInt(arg.Month)}, ${parseInt(arg.Rate)}, ${parseInt(arg.Hours)}, ${parseInt(arg.Salary)}, ${parseInt(arg.Insurance)}, '${arg.Deposit}', ${parseInt(arg.Total)})`, function(err){
+      if(err) console.log(err);
+
+    })
+  });
+});
+
+// Update worker rate and deposit
+ipcMain.on("newDepositRate", (event, arg) => {
+  db.run(`UPDATE Workers SET Rate=${parseInt(arg.Rate)}, Deposit='${arg.Deposit}' WHERE Id=${parseInt(arg.Worker_id)}`, (err) => {
+    if (err) console.log(err);
+
   });
 });
