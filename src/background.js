@@ -335,7 +335,7 @@ ipcMain.on("edit-worker", (event, arg) => {
 ipcMain.on("add-salary", function (event, arg){
   db.serialize(function () {
     // If hours added to worker in current month -> show err
-    db.each(`SELECT count(*) FROM History WHERE Worker_id=${arg.Worker.Id} AND Firm='${arg.Firm}'`, (err, rows) => {
+    db.each(`SELECT count(*) FROM History WHERE Worker_id=${arg.Worker.Id} AND Firm='${arg.Firm}' AND Month=${parseInt(arg.MonthStart)}`, (err, rows) => {
       if(rows['count(*)'] > 0){
         event.returnValue = 'err_exist'
       } else {
@@ -389,7 +389,11 @@ ipcMain.on("fetchWorkerInfo", function(event, arg) {
       mainWindow.webContents.send("fetchWorkerInfoDeposits:res", rows);
     });
     db.each(`SELECT * FROM Reports WHERE Worker_id = ${parseInt(arg)} ORDER BY Id`, (err, rows) => {
+      if(err) console.log(err);
       mainWindow.webContents.send("fetchWorkerInfoReports:res", rows);
+    });
+    db.each(`SELECT Deposit FROM Workers WHERE Id = ${arg}`, (err, rows) => {
+      mainWindow.webContents.send("fetchWorkerInfoCurrentDeposit:res", rows);
     })
 
   });
@@ -475,9 +479,11 @@ ipcMain.on("update-deposit", (event, arg) => {
 
 // ========== Report API ==========
 
+
+// Fetch workers for current month and firm, which don't receive salary
 ipcMain.on("reportFetchWorkers", function(event, arg) {
   db.serialize(function(){
-    db.each(`SELECT * FROM History WHERE Firm='${arg.Firm}' AND Month=${parseInt(arg.Month)} ORDER BY Worker_name`, (err, rows) => {
+    db.each(`SELECT * FROM History WHERE Firm='${arg.Firm}' AND Month=${parseInt(arg.Month)} AND ifnull(Report_id, '') = '' ORDER BY Worker_name`, (err, rows) => {
       mainWindow.webContents.send("reportFetchWorkers:res", rows);
     })
   });
@@ -495,8 +501,12 @@ ipcMain.on("saveReport", function (event, arg){
   db.serialize(function () {
     db.run(`INSERT into Reports (Worker_name, Worker_id, Firm, Month, Rate, Hours, Salary, Insurance, Deposit, Total) values('${arg.Worker_name}', '${arg.Worker_id}', '${arg.Firm}', ${parseInt(arg.Month)}, ${parseInt(arg.Rate)}, ${parseInt(arg.Hours)}, ${parseInt(arg.Salary)}, ${parseInt(arg.Insurance)}, '${arg.Deposit}', ${parseInt(arg.Total)})`, function(err){
       if(err) console.log(err);
-
-    })
+    });
+    db.each(`SELECT Id From Reports WHERE Worker_id=${arg.Worker_id} AND Firm='${arg.Firm}' AND Month=${parseInt(arg.Month)}`, (err, rows) => {
+      db.run(`UPDATE History SET Report_id=${rows.Id} WHERE Id=${parseInt(arg.Id)}`, (err) => {
+        if (err) console.log(err);
+      });
+    });
   });
 });
 
@@ -504,6 +514,42 @@ ipcMain.on("saveReport", function (event, arg){
 ipcMain.on("newDepositRate", (event, arg) => {
   db.run(`UPDATE Workers SET Rate=${parseInt(arg.Rate)}, Deposit='${arg.Deposit}' WHERE Id=${parseInt(arg.Worker_id)}`, (err) => {
     if (err) console.log(err);
+
+  });
+});
+
+// ======= Edit, Delete Hours and Deposit check =======
+
+ipcMain.on("hours-check-salary", function(event, arg) {
+  db.serialize(function(){
+    db.each(`SELECT Id FROM Reports WHERE Worker_id='${arg.Worker_id}' ORDER BY Id DESC LIMIT 1`, (err, rows) => {
+      if(rows.Id === arg.Report_id) {
+        event.returnValue = 1
+      } else {
+        event.returnValue = 0;
+      }
+    })
+  });
+});
+
+ipcMain.on("delete-report", function(event, arg) {
+  db.serialize(function(){
+    let errors= [];
+
+    db.run(`DELETE FROM Reports WHERE Id=${parseInt(arg.Id)}`, function (err) {
+      if(err) {
+        errors.push(err);
+        console.log(err)
+      }
+    });
+    db.run(`UPDATE Workers SET Deposit='${arg.Deposit}' WHERE Id=${parseInt(arg.Worker_id)}`, (err) => {
+      if (err) errors.push(err);
+    });
+    db.run(`UPDATE History SET Report_id='' WHERE Worker_id=${arg.Worker_id} AND Firm='${arg.Firm}' AND Month=${parseInt(arg.Month)}`, (err) => {
+      if (err) errors.push(err);
+    });
+
+    event.returnValue = errors.length <= 0;
 
   });
 });

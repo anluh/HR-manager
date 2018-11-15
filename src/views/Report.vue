@@ -67,7 +67,7 @@
                         <td>{{ reportWorker.Month | dateFormatter}}</td>
                         <td class="rate-td">
                             <div class="input-field rate-input no-print">
-                                <input v-model.lazy="reportWorker.Rate" @change="countTotal(reportWorker)" type="text">
+                                <input v-model.lazy="reportWorker.Rate" @load="countTotal(reportWorker)" @change="countTotal(reportWorker)" type="text">
                             </div>
                             <div class="print">{{ reportWorker.Rate }}</div>
                         </td>
@@ -175,6 +175,18 @@
           result.Insurance = 200
         }
 
+        let rate = parseInt(result.Rate);
+        let total = 0;
+        if(rate){
+          total = rate * result.Hours - result.Insurance - result.Deposit;
+          result.Salary = rate * result.Hours;
+
+          total > 0 ? result.Total = total : result.Total = 0;
+        } else {
+          result.Total = '';
+        }
+        this.totalSalary();
+
         this.report.push(result)
       });
 
@@ -242,10 +254,9 @@
 
           report.Total === 0 ? query.Deposit = report.Deposit - report.Salary : query.Deposit = 0;
 
-          console.log(query);
-
           ipcRenderer.send('newDepositRate', query);
-          ipcRenderer.send('saveReport', report)
+          ipcRenderer.send('saveReport', report);
+          this.reset();
         })
       }
     },
