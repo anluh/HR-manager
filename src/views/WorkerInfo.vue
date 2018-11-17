@@ -1,7 +1,7 @@
 <template>
     <div class="worker-info">
         <div class="page-title">
-                <h3>{{worker.Name}} Info</h3>
+                <h3>{{name}} Info</h3>
         </div>
 
         <div class="view-wrapper">
@@ -32,7 +32,7 @@
                                 <div v-show="hoursCheckSalary(history)">
                                     <router-link @click.stop :to="{ name: 'edithours', params: { id: history.Id, history: history } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
                                     <modal @submit="deleteHistory(history)" submit-btn="Delete">
-                                        <i class="danger far fa-trash-alt"></i>
+                                        <i v-if="!history.Report_id" class="danger far fa-trash-alt"></i>
                                         <div slot="popup-text">Do you want to delete this item?</div>
                                     </modal>
                                 </div>
@@ -56,11 +56,13 @@
                             <td>{{ deposit.Date | dateFormatterDay}}</td>
                             <td>{{ deposit.Money }}</td>
                             <td>
-                                <router-link @click.stop :to="{ name: 'editdeposit', params: { id: deposit.Id, deposit: deposit } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
-                                <modal @submit="deleteDeposit(deposit)" submit-btn="Delete">
-                                    <i class="danger far fa-trash-alt"></i>
-                                    <div slot="popup-text">Do you want to delete this item?</div>
-                                </modal>
+                                <div v-show="depositsCheckSalary(deposit)">
+                                    <router-link @click.stop :to="{ name: 'editdeposit', params: { id: deposit.Id, deposit: deposit } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
+                                    <modal @submit="deleteDeposit(deposit)" submit-btn="Delete">
+                                        <i class="danger far fa-trash-alt"></i>
+                                        <div slot="popup-text">Do you want to delete this item?</div>
+                                    </modal>
+                                </div>
                             </td>
                         </tr>
                         </tbody>
@@ -126,7 +128,7 @@
     },
     data(){
       return {
-        worker: {},
+        name: '',
         historys: [],
         deposits: [],
         reports: [],
@@ -134,10 +136,11 @@
       }
     },
     created(){
-      this.worker = this.$route.params.worker;
       let historys = this.historys;
       let deposits = this.deposits;
       let reports = this.reports;
+      let v = this;
+
 
       this.fetchWorkerInfo();
       ipcRenderer.on("fetchWorkerInfo:res", function (evt, result) {
@@ -150,7 +153,8 @@
         reports.push(result);
       });
       ipcRenderer.on("fetchWorkerInfoCurrentDeposit:res", function (evt, result) {
-        this.currentDeposit = result.Deposit;
+        result.Deposit ? v.currentDeposit = result.Deposit : v.currentDeposit = 0;
+        v.name = result.Name;
       })
     },
     filters: {
@@ -168,7 +172,7 @@
         }
       },
       deleteDeposit(deposit){
-        if(ipcRenderer.sendSync('delete-deposit', deposit.Id)){
+        if(ipcRenderer.sendSync('delete-deposit', deposit)){
           this.fetchWorkerInfo();
         }
       },
@@ -183,13 +187,20 @@
         this.historys.splice(0, this.historys.length);
         this.deposits.splice(0, this.deposits.length);
         this.reports.splice(0, this.reports.length);
-        ipcRenderer.send("fetchWorkerInfo", this.worker.Id);
+        ipcRenderer.send("fetchWorkerInfo", this.$route.params.id);
       },
       hoursCheckSalary(hour){
         if(!hour.Report_id){
           return 1
         } else {
           return ipcRenderer.sendSync('hours-check-salary', hour)
+        }
+      },
+      depositsCheckSalary(deposit){
+        if(!deposit.Report_id){
+          return 1
+        } else {
+          return ipcRenderer.sendSync('deposit-check-salary', deposit)
         }
       }
     }

@@ -374,12 +374,67 @@ ipcMain.on("update-hours", (event, arg) => {
       console.log(err);
       event.returnValue = false
     } else {
-      event.returnValue = true
+      if(arg.Report_id) {
+        db.each(`SELECT Rate, Deposit FROM Reports WHERE Id=${parseInt(arg.Report_id)}`, (error, rows) => {
+          let errors= [];
+
+          if(error){
+            console.log(error);
+            errors.push(error)
+          } else {
+
+            let hours = arg.Hours,
+              rate = rows.Rate,
+              deposit = rows.Deposit,
+              insurance = 0,
+              endTotal = 0,
+              currentDeposit = 0;
+
+            if (hours >= 0 && hours <= 100) {
+              insurance = 100
+            } else if (hours > 100 && hours <= 170) {
+              insurance = 150
+            } else if (hours > 170) {
+              insurance = 200
+            }
+
+            let total = rate * hours - insurance - deposit;
+            let salary = rate * hours;
+
+            if (total > 0) {
+              endTotal = total;
+              currentDeposit = 0;
+            } else {
+              endTotal = 0;
+              currentDeposit = deposit - salary + insurance;
+            }
+
+            db.run(`UPDATE Reports SET Hours=${hours}, Salary=${salary}, Insurance=${insurance}, Total=${endTotal} WHERE Id=${parseInt(arg.Report_id)}`, (err) => {
+              if (err) {
+                console.log(err);
+                errors.push(err);
+              }
+            });
+            db.run(`UPDATE Workers SET Deposit=${currentDeposit} WHERE Id=${parseInt(arg.Worker.Id)}`, (err) => {
+              if (err) {
+                console.log(err);
+                errors.push(err);
+              }
+            });
+          }
+
+          errors.length > 0 ? event.returnValue = false : event.returnValue = true;
+
+        });
+
+      } else { // If arg.Report_id exist
+        event.returnValue = true
+      }
     }
   });
 });
 
-// ========== WorkerInfo API ==========
+// ========== Worker Info API ==========
 ipcMain.on("fetchWorkerInfo", function(event, arg) {
   db.serialize(function(){
     db.each(`SELECT * FROM History WHERE Worker_id = ${parseInt(arg)} ORDER BY Id`, (err, rows) => {
@@ -392,7 +447,7 @@ ipcMain.on("fetchWorkerInfo", function(event, arg) {
       if(err) console.log(err);
       mainWindow.webContents.send("fetchWorkerInfoReports:res", rows);
     });
-    db.each(`SELECT Deposit FROM Workers WHERE Id = ${arg}`, (err, rows) => {
+    db.each(`SELECT Name, Deposit FROM Workers WHERE Id = ${arg}`, (err, rows) => {
       mainWindow.webContents.send("fetchWorkerInfoCurrentDeposit:res", rows);
     })
 
@@ -447,6 +502,13 @@ ipcMain.on("add-deposit", function (event, arg){
   errors.length > 0 ? event.returnValue = false : event.returnValue = true;
 
 });
+ipcMain.on("fetchCurrentDeposit", function(event, arg) {
+  db.serialize(function(){
+    db.each(`SELECT * FROM Deposits WHERE Id=${arg} ORDER BY Id DESC`, (err, rows) => {
+      mainWindow.webContents.send("fetchCurrentDeposit:res", rows);
+    })
+  });
+});
 ipcMain.on("fetchDepositHistory", function() {
   db.serialize(function(){
     db.each(`SELECT * FROM Deposits ORDER BY Id DESC`, (err, rows) => {
@@ -456,12 +518,61 @@ ipcMain.on("fetchDepositHistory", function() {
 });
 ipcMain.on("delete-deposit", function(event, arg) {
   db.serialize(function(){
-    db.run(`DELETE FROM Deposits WHERE Id=${parseInt(arg)}`, function (err) {
+    db.run(`DELETE FROM Deposits WHERE Id=${parseInt(arg.Id)}`, function (err) {
       if(err){
         console.log(err);
         event.returnValue = false
       } else {
-        event.returnValue = true
+        if (!arg.Report_id) {
+          db.run(`UPDATE Workers SET Deposit= Deposit - ${parseInt(arg.Money)} WHERE Id=${parseInt(arg.Worker_id)}`, (err) => {
+            if (err) {
+              console.log(err);
+              event.returnValue = false;
+            } else {
+              event.returnValue = true;
+            }
+          });
+        } else {
+          let errors = [];
+
+          db.each(`SELECT Salary, Insurance, Deposit, Total FROM Reports WHERE Id=${arg.Report_id}`, (err, result) => {
+            if (err) {
+              console.log(err);
+              errors.push(err);
+            } else {
+              let deposit = result.Deposit - arg.Money;
+              let total = result.Salary - result.Insurance - deposit;
+              let currentDeposit = 0;
+              let endTotal = 0;
+
+              if (total > 0) {
+                currentDeposit = 0
+                endTotal = total;
+              } else {
+                currentDeposit = deposit - result.Salary + result.Insurance;
+                endTotal = 0;
+              }
+
+              db.run(`UPDATE Reports SET Deposit='${deposit}', Total=${endTotal} WHERE Id=${arg.Report_id}`, (err) => {
+                if (err) {
+                  console.log(err);
+                  errors.push(err);
+                }
+              });
+              db.run(`UPDATE Workers SET Deposit='${currentDeposit}' WHERE Id=${arg.Worker_id}`, (err) => {
+                if (err) {
+                  console.log(err);
+                  errors.push(err);
+                }
+              });
+
+              errors.length > 0 ? event.returnValue = false : event.returnValue = true;
+            }
+          });
+        }
+
+
+
       }
     })
   });
@@ -472,7 +583,61 @@ ipcMain.on("update-deposit", (event, arg) => {
       console.log(err);
       event.returnValue = false
     } else {
-      event.returnValue = true
+      if(!arg.Report_id) {
+        db.run(`UPDATE Workers SET Deposit= Deposit - ${parseInt(arg.oldMoney) - parseInt(arg.Money)} WHERE Id=${parseInt(arg.Worker_id)}`, (err) => {
+          if (err) {
+            console.log(err);
+            event.returnValue = false
+          } else {
+            event.returnValue = true
+          }
+        });
+      } else {
+        let deposit = arg.Money,
+          depositChange = arg.Money - arg.oldMoney,
+          currentDeposit = 0,
+          afterSalaryDeposit = 0,
+          endTotal =0,
+          total = 0,
+          errors= [];
+
+        db.each(`SELECT * FROM Reports WHERE Id=${parseInt(arg.Report_id)}`, (err, result) => {
+          total = result.Salary - result.Insurance - result.Deposit - depositChange;
+
+          if (total > 0) {
+            currentDeposit = 0;
+            endTotal = total;
+          } else {
+            currentDeposit = parseInt(result.Deposit) + depositChange - result.Salary + result.Insurance;
+            endTotal = 0;
+          }
+
+          db.each(`SELECT Money FROM Deposits WHERE Worker_id=${arg.Worker_id} AND ifnull(Report_id, '') = ''`, (err, result) => {
+            afterSalaryDeposit += result.Money;
+          }, () => {
+            let workerDeposit = currentDeposit + afterSalaryDeposit;
+            db.run(`UPDATE Reports SET Deposit='${deposit}', Total=${endTotal} WHERE Id=${arg.Report_id}`, (err) => {
+              if (err) {
+                console.log(err);
+                errors.push(err);
+              }
+            });
+            db.run(`UPDATE Workers SET Deposit= '${workerDeposit}' WHERE Id=${arg.Worker_id}`, (err) => {
+
+              if (err) {
+                console.log(err);
+                errors.push(err);
+              }
+            });
+          });
+
+
+
+          errors.length > 0 ? event.returnValue = false : event.returnValue = true;
+
+        });
+      }
+
     }
   });
 });
@@ -503,7 +668,11 @@ ipcMain.on("saveReport", function (event, arg){
       if(err) console.log(err);
     });
     db.each(`SELECT Id From Reports WHERE Worker_id=${arg.Worker_id} AND Firm='${arg.Firm}' AND Month=${parseInt(arg.Month)}`, (err, rows) => {
+      // arg.Id - current Hours item Id
       db.run(`UPDATE History SET Report_id=${rows.Id} WHERE Id=${parseInt(arg.Id)}`, (err) => {
+        if (err) console.log(err);
+      });
+      db.run(`UPDATE Deposits SET Report_id=${rows.Id} WHERE Worker_id=${parseInt(arg.Worker_id)} AND ifnull(Report_id, '') = ''`, (err) => {
         if (err) console.log(err);
       });
     });
@@ -521,6 +690,17 @@ ipcMain.on("newDepositRate", (event, arg) => {
 // ======= Edit, Delete Hours and Deposit check =======
 
 ipcMain.on("hours-check-salary", function(event, arg) {
+  db.serialize(function(){
+    db.each(`SELECT Id FROM Reports WHERE Worker_id='${arg.Worker_id}' ORDER BY Id DESC LIMIT 1`, (err, rows) => {
+      if(rows.Id === arg.Report_id) {
+        event.returnValue = 1
+      } else {
+        event.returnValue = 0;
+      }
+    })
+  });
+});
+ipcMain.on("deposit-check-salary", function(event, arg) {
   db.serialize(function(){
     db.each(`SELECT Id FROM Reports WHERE Worker_id='${arg.Worker_id}' ORDER BY Id DESC LIMIT 1`, (err, rows) => {
       if(rows.Id === arg.Report_id) {

@@ -1,7 +1,7 @@
 <template>
     <div class="deposit">
         <div class="page-title">
-            <h3>Edit Deposit {{$route.params.deposit.Worker_name}}</h3>
+            <h3>Edit Deposit {{newDeposit.Worker_name}}</h3>
         </div>
 
         <div class="salary__wrapper container">
@@ -9,7 +9,7 @@
             <form class="add-deposit" @submit.prevent="$v.newDeposit.$touch(); $v.date.$touch(); if(!$v.newDeposit.$invalid){saveDeposit(); $v.newDeposit.$reset(); $v.date.$reset()}">
                 <div class="input-field">
                     <input id="add-deposit__name"
-                           :value="$route.params.deposit.Worker_name"
+                           :value="newDeposit.Worker_name"
                            disabled
                            type="text">
                     <label class="active" for="add-deposit__name">Name</label>
@@ -81,16 +81,22 @@
       }
     },
     created() {
+      let v = this;
 
-      this.newDeposit.Id = this.$route.params.deposit.Id;
-      this.date = moment(this.$route.params.deposit.Date).format('DD.MM.YYYY');
-      this.newDeposit.Money = this.$route.params.deposit.Money;
+      ipcRenderer.send("fetchCurrentDeposit", this.$route.params.deposit.Id);
+
+      ipcRenderer.on("fetchCurrentDeposit:res", function (evt, result) {
+        v.newDeposit = result;
+        v.newDeposit.oldMoney = result.Money;
+      });
+
+      this.date = moment(this.newDeposit.Date).format('DD.MM.YYYY');
 
     },
     methods: {
       saveDeposit(){
         if(ipcRenderer.sendSync("update-deposit", this.newDeposit)){
-          router.push('/deposit')
+          router.push({name: 'workerinfo', params: { id: this.newDeposit.Worker_id }})
         }
       },
     },

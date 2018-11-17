@@ -146,6 +146,7 @@
         } else {
           this.disableFirms = 0;
         }
+        this.totalSalary();
       }
     },
     created() {
@@ -185,7 +186,6 @@
         } else {
           result.Total = '';
         }
-        this.totalSalary();
 
         this.report.push(result)
       });
@@ -243,16 +243,12 @@
         !total ? this.total = 0 : this.total = total;
       },
       saveReport(){
-        let currentTime = moment().valueOf();
-
         this.report.forEach((report) => {
           let query = {};
           query.Rate = report.Rate;
           query.Worker_id = report.Worker_id;
 
-          report.Group = currentTime;
-
-          report.Total === 0 ? query.Deposit = report.Deposit - report.Salary : query.Deposit = 0;
+          report.Total === 0 ? query.Deposit = report.Deposit - report.Salary + report.Insurance : query.Deposit = 0;
 
           ipcRenderer.send('newDepositRate', query);
           ipcRenderer.send('saveReport', report);

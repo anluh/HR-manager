@@ -58,11 +58,13 @@
                         <td>{{ history.Hours }}</td>
                         <td>{{ history.Firm }}</td>
                         <td>
-                            <router-link @click.stop :to="{ name: 'edithours', params: { id: history.Id, history: history, back: '/salary' } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
-                            <modal @submit="deleteHistory(history)" submit-btn="Delete">
-                                <i class="danger far fa-trash-alt"></i>
-                                <div slot="popup-text">Do you want to delete this worker?</div>
-                            </modal>
+                            <div v-show="hoursCheckSalary(history)">
+                                <router-link @click.stop :to="{ name: 'edithours', params: { id: history.Id, history: history, back: '/salary' } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
+                                <modal @submit="deleteHistory(history)" submit-btn="Delete">
+                                    <i v-if="!history.Report_id" class="danger far fa-trash-alt"></i>
+                                    <div slot="popup-text">Do you want to delete this worker?</div>
+                                </modal>
+                            </div>
                         </td>
                     </tr>
                     </tbody>
@@ -207,6 +209,13 @@
           });
         })(jQuery);
         /* eslint-enable */
+      },
+      hoursCheckSalary(hour){
+        if(!hour.Report_id){
+          return 1
+        } else {
+          return ipcRenderer.sendSync('hours-check-salary', hour)
+        }
       }
     },
     filters: {

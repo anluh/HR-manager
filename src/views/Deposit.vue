@@ -46,11 +46,13 @@
                         <td>{{ history.Date | dateFormatter}}</td>
                         <td>{{ history.Money }}</td>
                         <td>
-                            <router-link @click.stop :to="{ name: 'editdeposit', params: { id: history.Id, deposit: history } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
-                            <modal @submit="deleteHistory(history)" submit-btn="Delete">
-                                <i class="danger far fa-trash-alt"></i>
-                                <div slot="popup-text">Do you want to delete this deposit?</div>
-                            </modal>
+                            <div v-show="depositsCheckSalary(history)">
+                                <router-link @click.stop :to="{ name: 'editdeposit', params: { id: history.Id, deposit: history } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
+                                <modal @submit="deleteHistory(history)" submit-btn="Delete">
+                                    <i class="danger far fa-trash-alt"></i>
+                                    <div slot="popup-text">Do you want to delete this deposit?</div>
+                                </modal>
+                            </div>
                         </td>
                     </tr>
                     </tbody>
@@ -151,8 +153,15 @@
         ipcRenderer.send("fetchDepositHistory")
       },
       deleteHistory(history){
-        if(ipcRenderer.sendSync('delete-deposit', history.Id)){
+        if(ipcRenderer.sendSync('delete-deposit', history)){
           this.fetchDepositHistory();
+        }
+      },
+      depositsCheckSalary(deposit){
+        if(!deposit.Report_id){
+          return 1
+        } else {
+          return ipcRenderer.sendSync('deposit-check-salary', deposit)
         }
       }
     },

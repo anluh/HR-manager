@@ -100,6 +100,7 @@
       this.newSalary.Month = this.$route.params.history.Month;
       this.newSalary.Hours = this.$route.params.history.Hours;
       this.newSalary.Firm = this.$route.params.history.Firm;
+      this.newSalary.Report_id = this.$route.params.history.Report_id;
 
       this.materializeInit();
 
@@ -115,7 +116,7 @@
     },
     methods: {
       redirect(){
-        router.push('/salary')
+        router.push({name: 'workerinfo', params: { id: this.$route.params.history.Worker_id }})
       },
       saveSalary(){
         if(ipcRenderer.sendSync("update-hours", this.newSalary)){

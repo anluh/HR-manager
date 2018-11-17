@@ -339,7 +339,7 @@
         this.$v.filterBy.Date.$reset()
       },
       workerInfo(worker){
-        router.push({ name: "workerinfo", params: { id: worker.Id, worker: worker } })
+        router.push({ name: "workerinfo", params: { id: worker.Id } })
       }
 
     },
