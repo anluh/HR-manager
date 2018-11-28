@@ -35,7 +35,6 @@
                     </div>
                     <div class="input-field col s12 m6">
                         <select v-model="newSalary.Firm">
-                            <option :value="firmNone.Name">None</option>
                             <option :value="firm.Name" v-for="(firm, index) in firms" v-if="firm.Active === 1" :key="index">{{ firm.Name }}</option>
                         </select>
                         <label>Firm</label>
@@ -135,7 +134,7 @@
     },
     filters: {
       dateFormatter(value){
-        return window.moment(parseInt(value)).format('MM.YYYY')
+        return window.moment(parseFloat(value)).format('MM.YYYY')
       }
     }
 

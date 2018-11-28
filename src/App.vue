@@ -1,7 +1,8 @@
 <template>
   <div id="app" :class="{ collapsed: navCollapsed}">
     <div id="nav" class="z-depth-4">
-      <router-link to="/"><div class="nav__item"><i class="fas fa-briefcase"></i><span>Workers</span></div></router-link>
+      <router-link to="/"><div class="nav__item"><i class="fas fa-home"></i><span>Home</span></div></router-link>
+      <router-link to="/workers"><div class="nav__item"><i class="fas fa-briefcase"></i><span>Workers</span></div></router-link>
       <router-link to="/firms"><div class="nav__item"><i class="far fa-building"></i><span>Firms</span></div></router-link>
       <router-link to="/salary"><div class="nav__item"><i class="far fa-file-alt"></i><span>Hours</span></div></router-link>
       <router-link to="/deposit"><div class="nav__item"><i class="fas fa-dollar-sign"></i><span>Deposit</span></div></router-link>

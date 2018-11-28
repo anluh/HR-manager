@@ -49,7 +49,7 @@
                             <div v-show="depositsCheckSalary(history)">
                                 <router-link @click.stop :to="{ name: 'editdeposit', params: { id: history.Id, deposit: history } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
                                 <modal @submit="deleteHistory(history)" submit-btn="Delete">
-                                    <i class="danger far fa-trash-alt"></i>
+                                    <i v-if="!history.Report_id" class="danger far fa-trash-alt"></i>
                                     <div slot="popup-text">Do you want to delete this deposit?</div>
                                 </modal>
                             </div>
@@ -167,7 +167,7 @@
     },
     filters: {
       dateFormatter(value){
-        return window.moment(parseInt(value)).format('DD.MM.YYYY')
+        return window.moment(parseFloat(value)).format('DD.MM.YYYY')
       }
     }
   }

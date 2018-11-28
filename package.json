@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint",
     "rebuild": "electron-rebuild -f -w sqlite3",
     "build:electron": "vue-cli-service build:electron",
+    "build:electron:w": "vue-cli-service build:electron -w --x64",
     "postinstall": "electron-builder install-app-deps",
     "serve:electron": "vue-cli-service serve:electron"
   },

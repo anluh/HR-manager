@@ -75,7 +75,7 @@
 
                 <div class="form-btns">
                     <button class="waves-effect waves-light btn">Save</button>
-                    <router-link to="/" class="waves-effect waves-light btn red" style="margin-left: 20px">Cancel</router-link>
+                    <router-link to="/workers" class="waves-effect waves-light btn red" style="margin-left: 20px">Cancel</router-link>
                 </div>
             </form>
         </div>
@@ -195,9 +195,9 @@
         this.newWorker.Firm.Name = this.$route.params.worker.Firm;
         this.newWorker.Firm.Id = this.$route.params.worker.Firm_id;
         this.newWorker.Active = this.$route.params.worker.Active;
-        this.newWorker.startDate =  window.moment(parseInt(this.$route.params.worker.Start)).format('DD.MM.YYYY');
+        this.newWorker.startDate =  window.moment(parseFloat(this.$route.params.worker.Start)).format('DD.MM.YYYY');
         if(this.$route.params.worker.End !== 'null') {
-          this.newWorker.endDate = window.moment(parseInt(this.$route.params.worker.End)).format('DD.MM.YYYY');
+          this.newWorker.endDate = window.moment(parseFloat(this.$route.params.worker.End)).format('DD.MM.YYYY');
         } else {
           this.newWorker.endDate = ''
         }

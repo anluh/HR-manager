@@ -5,16 +5,30 @@
         </div>
 
         <div class="select-worker page-wrapper">
-            <div class="input-field select-worker__month">
-                <input id="select-worker__month"
-                       v-model.lazy="month"
-                       :class="{ invalid: !$v.month.isDate && $v.month.required, valid: $v.month.isDate && $v.month.required, disabled: disableFirms }"
-                       type="text">
-                <label for="select-worker__month">Month</label>
-                <span class="error danger" v-show="!$v.month.isDate && $v.month.required">Enter valid month MM.YYYY</span>
+            <div class="tabs">
+                <div @click="changeFilter()" :class="{ active: !tab }" class="tabs__item">Firms</div>
+                <div @click="changeFilter()" :class="{ active: tab }" class="tabs__item">Workers</div>
             </div>
 
-            <div class="select-worker__lists" :class="{ disabled: !$v.month.isDate || !$v.month.required }">
+            <div class="select-worker-wrapper">
+
+                <div class="input-field select-worker__month">
+                    <input id="select-worker__month"
+                           v-model.lazy="month"
+                           :class="{ invalid: !$v.month.isDate && $v.month.required, valid: $v.month.isDate && $v.month.required, disabled: disableFirms }"
+                           type="text">
+                    <label for="select-worker__month">Month</label>
+                    <span class="error danger" v-show="!$v.month.isDate && $v.month.required">Enter valid month MM.YYYY</span>
+                </div>
+
+                <span>Chose Worker:</span>
+                <div v-if="tab" class="select-worker__auto">
+                    <autocomplete :options="workers" v-model="workerAutocomplete" @input="addToReportAutocomp"></autocomplete>
+                </div>
+
+            </div>
+
+            <div v-if="!tab" class="select-worker__lists" :class="{ disabled: !$v.month.isDate || !$v.month.required }">
                 <div class="firm-list" :class="{ selected: disableFirms }">
                     <h5 class="title">Firms List</h5>
                     <div class="list-wrapper">
@@ -51,6 +65,7 @@
                         <th>№</th>
                         <th>Name</th>
                         <th>Month</th>
+                        <th v-if="tab">Firm</th>
                         <th>Hour Rate</th>
                         <th>Hours</th>
                         <th>Salary</th>
@@ -65,6 +80,7 @@
                         <td>{{ index + 1 }}</td>
                         <td>{{ reportWorker.Worker_name }}</td>
                         <td>{{ reportWorker.Month | dateFormatter}}</td>
+                        <td v-if="tab">{{ reportWorker.Firm}}</td>
                         <td class="rate-td">
                             <div class="input-field rate-input no-print">
                                 <input v-model.lazy="reportWorker.Rate" @load="countTotal(reportWorker)" @change="countTotal(reportWorker)" type="text">
@@ -86,7 +102,10 @@
                 <div class="submit-btns no-print">
                     <button class="waves-effect waves-light btn red" @click="reset()">RESET</button>
                     <button v-print="'#print-report'" class="waves-effect waves-light btn"><i class="fas fa-print"></i>Print</button>
-                    <button @click="saveReport()" class="waves-effect waves-light btn"><i class="fas fa-save"></i>Save</button>
+                    <div class="button-wrapper">
+                        <button :disabled="checkRate()" @click="saveReport(); reset();" :class="{saveHint: checkRate(), active: saveHint}" class="waves-effect waves-light btn"><i class="fas fa-save"></i>Save</button>
+                        <span><i v-if="checkRate()" @click="saveHint = !saveHint" class="fas fa-info-circle"></i></span>
+                    </div>
                 </div>
 
             </div>
@@ -100,19 +119,26 @@
   import moment from 'moment';
   const {ipcRenderer} = require('electron');
   import { required } from 'vuelidate/lib/validators'
-  // import modal from '@/components/modal.vue'
+  import autocomplete from '@/components/autocompleteReport.vue'
 
   const isDate = (value) => moment(value, 'MM.YYYY', true).isValid();
 
   export default {
     name: "report",
+    components: {
+      autocomplete
+    },
     data() {
       return {
         firms: [],
         workers: [],
         report: [],
+        tab: true,
+        workerAutocomplete: {},
         total: 0,
         disableFirms: 0,
+        rateIsEmpty: false,
+        saveHint: false,
         month: '',
         filter:{
           Month: null,
@@ -138,7 +164,13 @@
         this.workers.splice(0,this.workers.length);
         this.firms.forEach((item) => {
           item.active = 0;
-        })
+        });
+
+        if(this.filter.Month && this.tab === true){
+          this.workers.splice(0,this.workers.length);
+          ipcRenderer.send('reportWorkerAutocomplete', this.filter.Month);
+        }
+        this.report = [];
       },
       report(value) {
         if(value.length > 0){
@@ -147,11 +179,16 @@
           this.disableFirms = 0;
         }
         this.totalSalary();
+        this.checkRate();
       }
     },
     created() {
       let firms = this.firms;
       let workers = this.workers;
+
+      ipcRenderer.on("reportWorkerAutocomplete:res", function (evt, result) {
+        workers.push(result)
+      });
 
       ipcRenderer.send("printFirms");
       ipcRenderer.on("printFirms:res", function (evt, result) {
@@ -176,7 +213,22 @@
           result.Insurance = 200
         }
 
-        let rate = parseInt(result.Rate);
+        console.count('Reseived');
+        // console.log('Reports: ', this.report.length);
+
+        if(!result.Deposit){
+          result.Deposit = 0;
+        }  else {
+          this.report.forEach((item) => {
+            if(item.Worker_id === result.Worker_id && parseFloat(item.Total) === 0){
+              result.Deposit -= item.Salary - item.Insurance;
+            } else if(item.Worker_id === result.Worker_id && parseFloat(item.Total) !== 0) {
+              result.Deposit = 0;
+            }
+          })
+        }
+
+        let rate = parseFloat(result.Rate);
         let total = 0;
         if(rate){
           total = rate * result.Hours - result.Insurance - result.Deposit;
@@ -192,6 +244,11 @@
 
     },
     methods: {
+      changeFilter(){
+        this.tab = !this.tab;
+        this.report = [];
+        this.month = ''
+      },
       fetchWorkers(firm){
         this.filter.Firm = firm.Name;
         this.workers.splice(0, this.workers.length);
@@ -204,6 +261,11 @@
       },
       addToReport(worker){
         ipcRenderer.send('reportWorkerData', worker);
+      },
+      addToReportAutocomp(worker){
+        this.workers.splice(this.workers.indexOf(worker), 1);
+
+        this.addToReport(worker)
       },
       deleteReport(report){
         this.report.splice(this.report.indexOf(report), 1);
@@ -223,7 +285,7 @@
         })
       },
       countTotal(reportItem){
-        let rate = parseInt(reportItem.Rate);
+        let rate = parseFloat(reportItem.Rate);
         let total = 0;
         if(rate){
           total = rate * reportItem.Hours - reportItem.Insurance - reportItem.Deposit;
@@ -238,27 +300,39 @@
       totalSalary(){
         let total = 0;
         this.report.forEach((item) => {
-          total+=item.Total;
+          if(item.Total) total+=item.Total
         });
         !total ? this.total = 0 : this.total = total;
       },
-      saveReport(){
-        this.report.forEach((report) => {
-          let query = {};
-          query.Rate = report.Rate;
-          query.Worker_id = report.Worker_id;
+      checkRate(){
+        let check = true;
+        if(this.report.length <= 0) check = false;
+        this.report.forEach((item) => {
+          if(!item.Rate || !parseFloat(item.Rate)) check = false;
+        });
 
-          report.Total === 0 ? query.Deposit = report.Deposit - report.Salary + report.Insurance : query.Deposit = 0;
+        return !check;
+      },
+      saveReport() {
+          this.report.forEach((report) => {
+            let query = {};
+            query.Rate = report.Rate;
+            query.Worker_id = report.Worker_id;
 
-          ipcRenderer.send('newDepositRate', query);
-          ipcRenderer.send('saveReport', report);
-          this.reset();
-        })
+            report.Total === 0 ? query.Deposit = report.Deposit - report.Salary + report.Insurance : query.Deposit = 0;
+
+            ipcRenderer.send('newDepositRate', query);
+            ipcRenderer.send('saveReport', report);
+          })
       }
+
+    },
+    beforeDestroy(){
+      ipcRenderer.removeAllListeners('reportWorkerData:res');
     },
     filters: {
       dateFormatter(value){
-        return window.moment(parseInt(value)).format('MM.YYYY')
+        return window.moment(parseFloat(value)).format('MM.YYYY')
       }
     }
   }

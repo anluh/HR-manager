@@ -75,7 +75,7 @@
 
                 <div class="form-btns">
                     <button class="waves-effect waves-light btn">Save</button>
-                    <router-link to="/" class="waves-effect waves-light btn red" style="margin-left: 20px">Cancel</router-link>
+                    <router-link to="/workers" class="waves-effect waves-light btn red" style="margin-left: 20px">Cancel</router-link>
                 </div>
             </form>
         </div>

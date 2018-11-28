@@ -59,7 +59,7 @@
                                 <div v-show="depositsCheckSalary(deposit)">
                                     <router-link @click.stop :to="{ name: 'editdeposit', params: { id: deposit.Id, deposit: deposit } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
                                     <modal @submit="deleteDeposit(deposit)" submit-btn="Delete">
-                                        <i class="danger far fa-trash-alt"></i>
+                                        <i v-if="!deposit.Report_id" class="danger far fa-trash-alt"></i>
                                         <div slot="popup-text">Do you want to delete this item?</div>
                                     </modal>
                                 </div>
@@ -159,10 +159,10 @@
     },
     filters: {
       dateFormatter(value){
-        return window.moment(parseInt(value)).format('MM.YYYY')
+        return window.moment(parseFloat(value)).format('MM.YYYY')
       },
       dateFormatterDay(value){
-        return window.moment(parseInt(value)).format('DD.MM.YYYY')
+        return window.moment(parseFloat(value)).format('DD.MM.YYYY')
       }
     },
     methods: {

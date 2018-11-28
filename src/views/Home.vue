@@ -219,18 +219,18 @@
       ipcRenderer.send('printWorkers', this.pagination);
       ipcRenderer.on("printWorkers:res", function (evt, result) {
         workers.push(result.rows);
-        vm.pagination.totalItems = parseInt(result.totalItems);
+        vm.pagination.totalItems = parseFloat(result.totalItems);
       });
 
       ipcRenderer.on("printWorkersFilter:res", function (evt, result) {
         workers.push(result.rows);
-        vm.pagination.totalItems = parseInt(result.totalItems);
+        vm.pagination.totalItems = parseFloat(result.totalItems);
       });
 
       // Just Active Filter
       ipcRenderer.on("workerFilterActive:res", function (evt, result) {
         workers.push(result.rows);
-        vm.pagination.totalItems = parseInt(result.totalItems);
+        vm.pagination.totalItems = parseFloat(result.totalItems);
       });
 
       ipcRenderer.send("printFirms");
@@ -352,7 +352,7 @@
       },
       dateFormatter(value){
         if(value !== 'null') {
-          return window.moment(parseInt(value)).format('DD.MM.YYYY')
+          return window.moment(parseFloat(value)).format('DD.MM.YYYY')
         } else {
           return ''
         }

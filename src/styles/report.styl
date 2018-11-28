@@ -113,3 +113,82 @@
       background-color: rgba(242,242,242,0.7)
       -webkit-print-color-adjust: exact;
 
+.submit-btns
+  position: relative
+  padding-top: 30px
+.rate-empty
+  background $red-lighten
+  top: 0
+  width: 100%
+  position: absolute
+.saveHint
+  position: relative
+  overflow: visible
+
+  &:after
+    position: absolute
+    font-size: 11px;
+    content: 'Fill all Hour Rate fields';
+    line-height: 13px;
+    width: 100%;
+    text-align: left;
+    top: -135%;
+    left: 0;
+    background: $red-lighten;
+    color: #FFF
+    padding: 5px 7px;
+    border-radius: 5px 5px 0 5px;
+    text-transform none
+    opacity 0
+    transition: opacity .3s ease-in-out
+
+  &.active:after
+    opacity: 1
+
+.button-wrapper
+  display: inline-block
+  position: relative
+
+  span
+    color: #9F9F9F
+    position: absolute
+    cursor: pointer
+    right: -18px
+
+.tabs
+  &__item
+    display: inline-block
+    width: 100px
+    border: 1px solid $main-light
+    border-radius: 30px
+    padding: 7px 10px
+    text-align center
+    font-weight: 600
+    color: $main-color
+    cursor: pointer
+    margin-right: 20px
+
+    &.active
+      background $main-light
+      color #fff
+
+.select-worker-wrapper
+  display: flex
+  align-items: center
+
+  .select-worker__auto
+    width: 300px
+    margin-left: 20px
+    position: relative
+    display: flex
+    align-items: center
+
+
+  button
+    border-radius: 50%
+    margin-left: 20px
+    height: 50px
+    width: 50px
+    display: flex
+    justify-content: center
+    align-items: center

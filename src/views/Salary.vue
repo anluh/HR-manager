@@ -31,10 +31,11 @@
                     </div>
                     <div class="input-field col s12 m6">
                         <select v-model="newSalary.Firm">
-                            <option :value="firmNone.Name">None</option>
+                            <option :value="firmNone.Name" disabled>None</option>
                             <option :value="firm.Name" v-for="(firm, index) in firms" v-if="firm.Active === 1" :key="index">{{ firm.Name }}</option>
                         </select>
                         <label>Firm</label>
+                        <span class="error danger" v-show="$v.newSalary.$dirty && !$v.newSalary.Firm.notNone">This field is required</span>
                     </div>
                     <button :disabled="!$v.month.isDate" class="waves-effect waves-light btn">Save</button>
                 </div>
@@ -145,6 +146,11 @@
         Hours: {
           required,
           decimal
+        },
+        Firm: {
+          notNone(value){
+            return value !== 'None'
+          }
         }
       }
     },
@@ -177,6 +183,7 @@
         if(req === true){
           this.fetchSalaryHistory();
           this.fetchAutocompleteWorkers();
+          this.materializeInit();
           this.newSalary.Worker.Name='';
           this.newSalary.Worker.Id='';
           this.newSalary.Firm = 'None';
@@ -220,7 +227,7 @@
     },
     filters: {
       dateFormatter(value){
-        return window.moment(parseInt(value)).format('MM.YYYY')
+        return window.moment(parseFloat(value)).format('MM.YYYY')
       }
     }
   }
