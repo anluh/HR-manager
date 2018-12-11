@@ -762,6 +762,11 @@ ipcMain.on("delete-report", function(event, arg) {
     db.each(`SELECT Money from Deposits WHERE Worker_id=${arg.Worker_id} AND ifnull(Report_id, '') = ''`, (err, result) => {
       currentDeposit += parseFloat(result.Money);
     }, () => {
+      if(parseFloat(arg.Total) === 0){
+        // TODO add to current deposit Salary - Insurance
+        // TODO Bug with check Deposit. Can Edit and delete when last salary reported
+
+      }
       db.run(`UPDATE Workers SET Deposit='${currentDeposit}' WHERE Id=${parseFloat(arg.Worker_id)}`, (err) => {
         if (err) errors.push(err);
       });

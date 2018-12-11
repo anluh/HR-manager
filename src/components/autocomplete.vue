@@ -9,8 +9,9 @@
                    @keydown.down="onDownKey"
                    @keydown.up="onUpKey"
                    @keydown.enter="onEnterKey"
+                   @keydown.tab="onEnterKey"
             >
-            <label class="typeahead__text" for="search" ref="text">{{displayText}}</label>
+            <label class="typeahead__text" :class="{ activated: search }" for="search" ref="text">{{displayText}}</label>
         </div>
         <ul class="typeahead__list" ref="list" v-if="open">
             <li class="typeahead__item" v-for="(option, index) in filteredOptions" :key="index">
@@ -81,8 +82,10 @@
         }
       },
       select(option) {
-        this.displayText = option.Name,
+        this.search = option.Name,
           this.$emit('input', (option))
+        // this.displayText = option.Name,
+        //   this.$emit('input', (option))
         this.$refs.search.blur()
       },
       toggle(e) {
@@ -103,8 +106,8 @@
         this.open = true
       },
       onBlur() {
-        this.search = '';
-        this.selectIndex = 0;
+        // this.search = '';
+        // this.selectIndex = 0;
         this.$refs.list.scrollTop = 0;
         this.open = false;
 
@@ -119,6 +122,12 @@
   }
 </script>
 <style type="text/css">
+    .input-field>label:not(.label-icon).activated {
+        -webkit-transform: translateY(-14px) scale(0.8);
+        transform: translateY(-14px) scale(0.8);
+        -webkit-transform-origin: 0 0;
+        transform-origin: 0 0;
+    }
     .typeahead {
         border-radius: 3px;
         z-index: 1;
