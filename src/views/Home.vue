@@ -335,7 +335,7 @@
       },
       resetFilterValidation(){
         this.$v.filterBy.Name.$reset();
-        this.$v.filterBy.Firm.$reset();
+        // this.$v.filterBy.Firm.$reset();
         this.$v.filterBy.Date.$reset()
       },
       workerInfo(worker){

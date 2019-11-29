@@ -41,7 +41,14 @@
                 </div>
             </form>
 
-            <div class="history-wrapper">
+            <div class="hide-history">
+                <a @click.prevent="hideHistory = !hideHistory" href="#">
+                    <span v-if="!hideHistory"><i class="fas fa-eye-slash"></i>Hide history</span>
+                    <span v-if="hideHistory"><i class="fas fa-eye"></i>Show history</span>
+                </a>
+            </div>
+
+            <div :class="{hidden: hideHistory}" class="history-wrapper">
                 <table class="striped table-list" cellspacing="0" cellpadding="0">
                     <thead>
                     <tr>
@@ -63,7 +70,7 @@
                                 <router-link @click.stop :to="{ name: 'edithours', params: { id: history.Id, history: history, back: '/salary' } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
                                 <modal @submit="deleteHistory(history)" submit-btn="Delete">
                                     <i v-if="!history.Report_id" class="danger far fa-trash-alt"></i>
-                                    <div slot="popup-text">Do you want to delete this worker?</div>
+                                    <div slot="popup-text">Do you want to delete this worker hours?</div>
                                 </modal>
                             </div>
                         </td>
@@ -98,6 +105,7 @@
         firms: [],
         workers: [],
         historys: [],
+        hideHistory: false,
         month: '',
         hoursErr: 0,
         newSalary: {
@@ -218,11 +226,7 @@
         /* eslint-enable */
       },
       hoursCheckSalary(hour){
-        if(!hour.Report_id){
-          return 1
-        } else {
-          return ipcRenderer.sendSync('hours-check-salary', hour)
-        }
+        return !hour.Report_id ? 1 : 0
       }
     },
     filters: {

@@ -30,7 +30,14 @@
                 <button class="waves-effect waves-light btn">Save</button>
             </form>
 
-            <div class="history-wrapper">
+            <div class="hide-history">
+                <a @click.prevent="hideHistory = !hideHistory" href="#">
+                    <span v-if="!hideHistory"><i class="fas fa-eye-slash"></i>Hide history</span>
+                    <span v-if="hideHistory"><i class="fas fa-eye"></i>Show history</span>
+                </a>
+            </div>
+
+            <div :class="{hidden: hideHistory}" class="history-wrapper">
                 <table class="striped table-list" cellspacing="0" cellpadding="0">
                     <thead>
                     <tr>
@@ -65,11 +72,11 @@
 </template>
 
 <script>
-  import autocomplete from "../components/autocomplete"
-  import moment from 'moment';
   const {ipcRenderer} = require('electron');
   import { required, decimal } from 'vuelidate/lib/validators'
   import modal from '@/components/modal.vue'
+  import autocomplete from "../components/autocomplete"
+  import moment from 'moment';
 
 
   const isDate = (value) => moment(value, 'DD.MM.YYYY', true).isValid();
@@ -84,6 +91,7 @@
       return {
         workers: [],
         historys: [],
+        hideHistory: false,
         date: '',
         newDeposit: {
           Worker: {

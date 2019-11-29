@@ -21,7 +21,7 @@
                     <span class="error danger" v-show="!$v.month.isDate && $v.month.required">Enter valid month MM.YYYY</span>
                 </div>
 
-                <span>Chose Worker:</span>
+                <span v-if="tab">Chose Worker:</span>
                 <div v-if="tab" class="select-worker__auto">
                     <autocomplete :options="workers" v-model="workerAutocomplete" @input="addToReportAutocomp"></autocomplete>
                 </div>
@@ -71,6 +71,7 @@
                         <th>Salary</th>
                         <th>Insurance</th>
                         <th>Deposit</th>
+                        <th>Other</th>
                         <th>Total</th>
                     </tr>
                     </thead>
@@ -83,7 +84,11 @@
                         <td v-if="tab">{{ reportWorker.Firm}}</td>
                         <td class="rate-td">
                             <div class="input-field rate-input no-print">
-                                <input v-model.lazy="reportWorker.Rate" @load="countTotal(reportWorker)" @change="countTotal(reportWorker)" type="text">
+                                <input :class="{ disabled: reportWorker.disableDelete }"
+                                       v-model.lazy="reportWorker.Rate"
+                                       @load="countTotal(reportWorker)"
+                                       @change="countTotal(reportWorker)"
+                                       type="text">
                             </div>
                             <div class="print">{{ reportWorker.Rate }}</div>
                         </td>
@@ -91,9 +96,17 @@
                         <td>{{ reportWorker.Salary }}</td>
                         <td>{{ reportWorker.Insurance }}</td>
                         <td>{{ reportWorker.Deposit }}</td>
+                        <td class="rate-td">
+                            <div class="input-field rate-input no-print">
+                                <input :class="{ disabled: reportWorker.disableDelete }"
+                                       v-model.lazy="reportWorker.Other"
+                                       @change="countTotal(reportWorker)" type="text">
+                            </div>
+                            <div class="print">{{ reportWorker.Other }}</div>
+                        </td>
                         <td>{{ reportWorker.Total }}</td>
                         <td class="no-print">
-                            <a @click.prevent="deleteReport(reportWorker)" class="worker-btn"><i class="danger far fa-trash-alt"></i></a>
+                            <a v-if="!reportWorker.disableDelete" @click.prevent="deleteReport(reportWorker)" class="worker-btn"><i class="danger far fa-trash-alt"></i></a>
                         </td>
                     </tr>
                     </tbody>
@@ -172,12 +185,7 @@
         }
         this.report = [];
       },
-      report(value) {
-        if(value.length > 0){
-          this.disableFirms = 1
-        } else {
-          this.disableFirms = 0;
-        }
+      report() {
         this.totalSalary();
         this.checkRate();
       }
@@ -185,6 +193,7 @@
     created() {
       let firms = this.firms;
       let workers = this.workers;
+      let vm = this;
 
       ipcRenderer.on("reportWorkerAutocomplete:res", function (evt, result) {
         workers.push(result)
@@ -197,7 +206,11 @@
       });
 
       ipcRenderer.on("reportFetchWorkers:res", function (evt, result) {
-        result["active"] = 0;
+        let exist = vm.report.find((item)=>{ // highlight selected workers in `workers list`
+          return item.Worker_id === result.Worker_id && item.Firm === result.Firm && item.Month === result.Month
+        });
+
+        exist ? result["active"] = 1 : result["active"] = 0;
 
         workers.push(result)
       });
@@ -213,13 +226,14 @@
           result.Insurance = 200
         }
 
-        console.count('Reseived');
-        // console.log('Reports: ', this.report.length);
 
         if(!result.Deposit){
           result.Deposit = 0;
         }  else {
           this.report.forEach((item) => {
+            if(item.Worker_id === result.Worker_id){
+              item.disableDelete = true;
+            }
             if(item.Worker_id === result.Worker_id && parseFloat(item.Total) === 0){
               result.Deposit -= item.Salary - item.Insurance;
             } else if(item.Worker_id === result.Worker_id && parseFloat(item.Total) !== 0) {
@@ -269,6 +283,15 @@
       },
       deleteReport(report){
         this.report.splice(this.report.indexOf(report), 1);
+        if(this.tab) this.workers.push(report); // Add back to autocomplete
+
+
+        let test = this.report.slice().reverse().find((item)=>{
+          return item.Worker_id === report.Worker_id
+        });
+        if(test) this.report[this.report.indexOf(test)].disableDelete = false;
+
+
         this.workers.forEach((worker)=>{
           if(worker.Id === report.Id){
             worker.active = 0;
@@ -287,8 +310,11 @@
       countTotal(reportItem){
         let rate = parseFloat(reportItem.Rate);
         let total = 0;
+        let other = 0;
+        if(reportItem.Other) other = parseFloat(reportItem.Other);
+
         if(rate){
-          total = rate * reportItem.Hours - reportItem.Insurance - reportItem.Deposit;
+          total = rate * reportItem.Hours - reportItem.Insurance - reportItem.Deposit + other;
           reportItem.Salary = rate * reportItem.Hours;
 
           total > 0 ? reportItem.Total = total : reportItem.Total = 0;

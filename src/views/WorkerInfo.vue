@@ -83,6 +83,7 @@
                         <th>Salary</th>
                         <th>Insurance</th>
                         <th>Deposit</th>
+                        <th>Other</th>
                         <th>Total</th>
                     </tr>
                     </thead>
@@ -96,6 +97,7 @@
                         <td>{{ report.Salary }}</td>
                         <td>{{ report.Insurance }}</td>
                         <td>{{ report.Deposit }}</td>
+                        <td>{{ report.Other }}</td>
                         <td>{{ report.Total }}</td>
                         <td>
                             <modal @submit="deleteReport(report)" submit-btn="Delete">
@@ -119,6 +121,13 @@
 <script>
   const {ipcRenderer} = require('electron');
   import modal from '@/components/modal.vue'
+  import router from '../router'
+
+  document.addEventListener('keyup', (event) => {
+    if (event.keyCode === 8) {
+      router.push('/workers')
+    }
+  });
 
 
   export default {
@@ -190,11 +199,7 @@
         ipcRenderer.send("fetchWorkerInfo", this.$route.params.id);
       },
       hoursCheckSalary(hour){
-        if(!hour.Report_id){
-          return 1
-        } else {
-          return ipcRenderer.sendSync('hours-check-salary', hour)
-        }
+        return !hour.Report_id ? 1 : 0
       },
       depositsCheckSalary(deposit){
         if(!deposit.Report_id){
