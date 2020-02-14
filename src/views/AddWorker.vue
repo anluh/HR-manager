@@ -175,7 +175,7 @@
     },
     methods:{
       redirect(){
-        router.push('/');
+        router.push('/workers');
       },
       addWorker () {
         ipcRenderer.sendSync('add-worker', this.newWorker) === true ? this.redirect() : console.log("DB Error");

@@ -492,12 +492,13 @@ ipcMain.on("autocompleteWorkersDeposit", function() {
 });
 ipcMain.on("add-deposit", function (event, arg){
   let errors = [];
+  console.log(arg);
 
   db.serialize(function () {
-    db.run(`INSERT into Deposits (Worker_id, Worker_name, Date, Money) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseFloat(arg.Date)}, ${parseFloat(arg.Money)})`, function(err){
+    db.run(`INSERT into Deposits (Worker_id, Worker_name, Date, Money, Comment) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseFloat(arg.Date)}, ${parseFloat(arg.Money)}, '${arg.Comment}')`, function(err){
       if(err){
         console.log(err);
-        errors.push(err)
+        errors.push(err);
       }
     })
   });
@@ -557,7 +558,7 @@ ipcMain.on("delete-deposit", function(event, arg) {
   });
 });
 ipcMain.on("update-deposit", (event, arg) => {
-  db.run(`UPDATE Deposits SET Date=${parseFloat(arg.Date)}, Money=${parseFloat(arg.Money)} WHERE Id=${parseFloat(arg.Id)}`, (err) => {
+  db.run(`UPDATE Deposits SET Date=${parseFloat(arg.Date)}, Money=${parseFloat(arg.Money)}, Comment='${arg.Comment}' WHERE Id=${parseFloat(arg.Id)}`, (err) => {
     if (err) {
       console.log(err);
       event.returnValue = false

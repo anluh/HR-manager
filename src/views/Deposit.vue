@@ -26,6 +26,10 @@
                     <span class="error danger" v-show="$v.newDeposit.$dirty && !$v.newDeposit.Money.required">This field is required</span>
                     <span class="error danger" v-show="$v.newDeposit.$dirty && $v.newDeposit.Money.required && !$v.newDeposit.Money.decimal">Enter valid hours</span>
                 </div>
+                <div class="input-field">
+                    <input id="add-deposit__comment" v-model="newDeposit.Comment" type="text">
+                    <label for="add-deposit__comment">Comment</label>
+                </div>
 
                 <button class="waves-effect waves-light btn">Save</button>
             </form>
@@ -52,6 +56,7 @@
                         <td>{{ history.Worker_name }}</td>
                         <td>{{ history.Date | dateFormatter}}</td>
                         <td>{{ history.Money }}</td>
+                        <td>{{ history.Comment }}</td>
                         <td>
                             <div v-show="depositsCheckSalary(history)">
                                 <router-link @click.stop :to="{ name: 'editdeposit', params: { id: history.Id, deposit: history } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
@@ -118,6 +123,9 @@
         Money: {
           required,
           decimal
+        },
+        Comment: {
+          required,
         }
       }
     },
@@ -189,4 +197,6 @@
         justify-content: space-between
         align-items: center
         margin-bottom: 80px
+        &>*
+            margin: 1rem 10px
 </style>

@@ -55,6 +55,7 @@
                         <tr v-for="(deposit, index) in deposits" :key="index">
                             <td>{{ deposit.Date | dateFormatterDay}}</td>
                             <td>{{ deposit.Money }}</td>
+                            <td>{{ deposit.Comment }}</td>
                             <td>
                                 <div v-show="depositsCheckSalary(deposit)">
                                     <router-link @click.stop :to="{ name: 'editdeposit', params: { id: deposit.Id, deposit: deposit } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
@@ -121,14 +122,6 @@
 <script>
   const {ipcRenderer} = require('electron');
   import modal from '@/components/modal.vue'
-  import router from '../router'
-
-  document.addEventListener('keyup', (event) => {
-    if (event.keyCode === 8) {
-      router.push('/workers')
-    }
-  });
-
 
   export default {
     name: "workerinfo",

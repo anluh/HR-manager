@@ -30,6 +30,11 @@
                     <span class="error danger" v-show="$v.newDeposit.$dirty && $v.newDeposit.Money.required && !$v.newDeposit.Money.decimal">Enter valid hours</span>
                 </div>
 
+                <div class="input-field">
+                    <input id="add-deposit__comment" v-model="newDeposit.Comment" type="text">
+                    <label class="active" for="add-deposit__comment">Comment</label>
+                </div>
+
                 <button class="waves-effect waves-light btn">Save</button>
                 <router-link to="/deposit" class="waves-effect waves-light btn red" style="margin-left: 20px">Cancel</router-link>
             </form>
