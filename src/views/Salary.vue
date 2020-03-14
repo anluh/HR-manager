@@ -1,7 +1,7 @@
 <template>
     <div class="salary">
         <div class="page-title">
-            <h3>Salary</h3>
+            <h3>Hours</h3>
         </div>
 
         <div class="page-wrapper">
@@ -20,7 +20,7 @@
             <form class="add-salary" @submit.prevent="$v.newSalary.$touch(); if(!$v.newSalary.$invalid){saveSalary(); $v.newSalary.$reset()}">
                 <div class="add-salary__data" :class="{ disabled: !$v.month.isDate || !$v.month.required }">
                     <div class="input-field">
-                        <autocomplete :options="workers" v-model="newSalary.Worker"></autocomplete>
+                        <autocomplete :options="workers" ref="workerField" v-model="newSalary.Worker"></autocomplete>
                         <span class="error danger" v-show="$v.newSalary.$dirty && !$v.newSalary.Worker.Name.required">This field is required</span>
                     </div>
                     <div class="input-field">
@@ -196,6 +196,7 @@
           this.newSalary.Worker.Id='';
           this.newSalary.Firm = 'None';
           this.newSalary.Hours = '';
+          this.$refs.workerField.clear();
         } else if(req === 'err_exist'){
           this.hoursErr = 1;
           setTimeout(function(){

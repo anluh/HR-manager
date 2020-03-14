@@ -8,7 +8,7 @@
 
             <form class="add-deposit" @submit.prevent="$v.newDeposit.$touch(); $v.date.$touch(); if(!$v.newDeposit.$invalid){saveDeposit(); $v.newDeposit.$reset(); $v.date.$reset()}">
                 <div class="input-field">
-                    <autocomplete :options="workers" v-model="newDeposit.Worker"></autocomplete>
+                    <autocomplete :options="workers" ref="workerField" v-model="newDeposit.Worker"></autocomplete>
                     <span class="error danger" v-show="$v.newDeposit.$dirty && !$v.newDeposit.Worker.Name.required">This field is required</span>
                 </div>
                 <div class="input-field">
@@ -21,8 +21,8 @@
                     <span class="error danger" v-show="!$v.date.isDate && $v.date.required">Enter valid date DD.MM.YYYY</span>
                 </div>
                 <div class="input-field">
-                    <input id="add-deposit__hours" v-model="newDeposit.Money" type="text">
-                    <label for="add-deposit__hours">Money</label>
+                    <input id="add-deposit__money" v-model="newDeposit.Money" type="text">
+                    <label for="add-deposit__money">Money</label>
                     <span class="error danger" v-show="$v.newDeposit.$dirty && !$v.newDeposit.Money.required">This field is required</span>
                     <span class="error danger" v-show="$v.newDeposit.$dirty && $v.newDeposit.Money.required && !$v.newDeposit.Money.decimal">Enter valid hours</span>
                 </div>
@@ -158,6 +158,14 @@
           this.fetchDepositHistory();
           this.date='';
           this.newDeposit.Money = '';
+          this.newDeposit.Comment = '';
+          this.$refs.workerField.clear();
+
+          /* eslint-disable */
+          (jQuery)('.add-deposit__date ~ label').removeClass('active');
+          (jQuery)('.add-deposit__money ~ label').removeClass('active');
+          (jQuery)('.add-deposit__comment ~ label').removeClass('active');
+          /* eslint-enable */
         }
       },
       fetchAutocompleteWorkersDeposit(){

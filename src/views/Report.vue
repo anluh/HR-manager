@@ -94,7 +94,16 @@
                         </td>
                         <td>{{ reportWorker.Hours }}</td>
                         <td>{{ reportWorker.Salary }}</td>
-                        <td>{{ reportWorker.Insurance }}</td>
+                        <td>
+                            <div class="input-field rate-input no-print">
+                                <input :class="{ disabled: reportWorker.disableDelete }"
+                                       v-model.lazy="reportWorker.Insurance"
+                                       @load="countTotal(reportWorker)"
+                                       @change="countTotal(reportWorker)"
+                                       type="text">
+                            </div>
+                            <div class="print">{{ reportWorker.Insurance }}</div>
+                        </td>
                         <td>{{ reportWorker.Deposit }}</td>
                         <td class="rate-td">
                             <div class="input-field rate-input no-print">

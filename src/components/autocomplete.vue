@@ -117,6 +117,9 @@
       },
       onEscape() {
         this.$refs.search.blur()
+      },
+      clear() {
+          this.search = '';
       }
     }
   }

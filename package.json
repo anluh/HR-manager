@@ -13,7 +13,7 @@
     "serve:electron": "vue-cli-service serve:electron"
   },
   "dependencies": {
-    "jquery": "^3.3.1",
+    "jquery": "^3.4.1",
     "knex": "^0.15.2",
     "materialize-css": "^1.0.0-rc.2",
     "moment": "^2.22.2",
@@ -29,10 +29,10 @@
     "@vue/cli-plugin-eslint": "^3.0.4",
     "@vue/cli-service": "^3.0.4",
     "electron": "^2.0.2",
-    "electron-rebuild": "^1.8.2",
+    "electron-rebuild": "^1.10.0",
     "stylus": "^0.54.5",
     "stylus-loader": "^3.0.2",
-    "vue-cli-plugin-electron-builder": "^1.0.0-rc.3",
+    "vue-cli-plugin-electron-builder": "^1.4.5",
     "vue-template-compiler": "^2.5.17"
   },
   "main": "dist_electron/bundled/background.js"
