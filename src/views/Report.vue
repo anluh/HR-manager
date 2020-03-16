@@ -61,19 +61,17 @@
             <div class="report-list" id="print-report">
                 <div class="print">
                     <h5 class="print-title">Salary List</h5>
-                    <div class="print-data">Salary month: {{month}}</div>
                     <div class="print-data">Date: {{today}}</div>
                 </div>
 
                 <table class="striped report">
                     <thead>
                     <tr>
-                        <th>№</th>
                         <th>Name</th>
-                        <th class="no-print">Month</th>
+                        <th>Month</th>
                         <th v-if="tab">Firm</th>
-                        <th>Hour Rate</th>
                         <th>Hours</th>
+                        <th>Hour Rate</th>
                         <th>Salary</th>
                         <th>Insurance</th>
                         <th>Deposit</th>
@@ -84,10 +82,10 @@
 
                     <tbody>
                     <tr v-for="(reportWorker, index) in report" :key="index">
-                        <td>{{ index + 1 }}</td>
                         <td>{{ reportWorker.Worker_name }}</td>
-                        <td class="no-print">{{ reportWorker.Month | dateFormatter}}</td>
+                        <td>{{ reportWorker.Month | dateFormatter}}</td>
                         <td v-if="tab">{{ reportWorker.Firm}}</td>
+                        <td>{{ reportWorker.Hours | numberFormatter}}</td>
                         <td class="rate-td">
                             <div class="input-field rate-input no-print">
                                 <input :class="{ disabled: reportWorker.disableDelete }"
@@ -96,10 +94,9 @@
                                        @change="countTotal(reportWorker)"
                                        type="text">
                             </div>
-                            <div class="print">{{ reportWorker.Rate }}</div>
+                            <div class="print">{{ reportWorker.Rate | numberFormatter}}</div>
                         </td>
-                        <td>{{ reportWorker.Hours }}</td>
-                        <td>{{ reportWorker.Salary }}</td>
+                        <td>{{ reportWorker.Salary | numberFormatter}}</td>
                         <td>
                             <div class="input-field rate-input no-print">
                                 <input :class="{ disabled: reportWorker.disableDelete }"
@@ -108,25 +105,25 @@
                                        @change="countTotal(reportWorker)"
                                        type="text">
                             </div>
-                            <div class="print">{{ reportWorker.Insurance }}</div>
+                            <div class="print">{{ reportWorker.Insurance | numberFormatter }}</div>
                         </td>
-                        <td>{{ reportWorker.Deposit }}</td>
+                        <td>{{ reportWorker.Deposit | numberFormatter}}</td>
                         <td class="rate-td">
                             <div class="input-field rate-input no-print">
                                 <input :class="{ disabled: reportWorker.disableDelete }"
                                        v-model.lazy="reportWorker.Other"
                                        @change="countTotal(reportWorker)" type="text">
                             </div>
-                            <div class="print">{{ reportWorker.Other }}</div>
+                            <div class="print">{{ reportWorker.Other | numberFormatter }}</div>
                         </td>
-                        <td>{{ reportWorker.Total }}</td>
+                        <td>{{ reportWorker.Total | numberFormatter}}</td>
                         <td class="no-print">
                             <a v-if="!reportWorker.disableDelete" @click.prevent="deleteReport(reportWorker)" class="worker-btn"><i class="danger far fa-trash-alt"></i></a>
                         </td>
                     </tr>
                     </tbody>
                 </table>
-                <h5 class="total-money">Total: {{ total }} CZK</h5>
+                <h5 class="total-money">Total: {{ total | numberFormatter}}</h5>
                 <div class="submit-btns no-print">
                     <button class="waves-effect waves-light btn red" @click="reset()">RESET</button>
                     <button v-print="'#print-report'" class="waves-effect waves-light btn"><i class="fas fa-print"></i>Print</button>
@@ -383,6 +380,9 @@
     filters: {
       dateFormatter(value){
         return window.moment(parseFloat(value)).format('MM.YYYY')
+      },
+      numberFormatter(value){
+          return value ? parseInt(value).toLocaleString().replace(',',' ') : '';
       }
     }
   }
