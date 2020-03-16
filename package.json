@@ -1,5 +1,5 @@
 {
-  "name": "electron_vue_sqlite3",
+  "name": "hr_manager",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -35,5 +35,5 @@
     "vue-cli-plugin-electron-builder": "^1.4.5",
     "vue-template-compiler": "^2.5.17"
   },
-  "main": "dist_electron/bundled/background.js"
+  "main": "./background.js"
 }

@@ -62,8 +62,28 @@
   .list-item.active
     pointer-events none
 
+.print-title
+  text-align: center
+.print-data
+  font-size: 12px
+  margin-bottom: 5px
+
 .report-list
   margin-top: 40px
+  @media print
+    font-size: 10px
+
+    .total-money
+      font-size 18px
+      padding-bottom 5px
+      margin-right: 0
+      border-bottom 1px solid black
+      float right
+
+    tr
+      border-bottom 1px solid black
+      border-left none
+      border-right none
 
 .report
   tbody

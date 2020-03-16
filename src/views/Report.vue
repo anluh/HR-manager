@@ -59,12 +59,18 @@
 
 
             <div class="report-list" id="print-report">
+                <div class="print">
+                    <h5 class="print-title">Salary List</h5>
+                    <div class="print-data">Salary month: {{month}}</div>
+                    <div class="print-data">Date: {{today}}</div>
+                </div>
+
                 <table class="striped report">
                     <thead>
                     <tr>
                         <th>№</th>
                         <th>Name</th>
-                        <th>Month</th>
+                        <th class="no-print">Month</th>
                         <th v-if="tab">Firm</th>
                         <th>Hour Rate</th>
                         <th>Hours</th>
@@ -80,7 +86,7 @@
                     <tr v-for="(reportWorker, index) in report" :key="index">
                         <td>{{ index + 1 }}</td>
                         <td>{{ reportWorker.Worker_name }}</td>
-                        <td>{{ reportWorker.Month | dateFormatter}}</td>
+                        <td class="no-print">{{ reportWorker.Month | dateFormatter}}</td>
                         <td v-if="tab">{{ reportWorker.Firm}}</td>
                         <td class="rate-td">
                             <div class="input-field rate-input no-print">
@@ -162,6 +168,7 @@
         rateIsEmpty: false,
         saveHint: false,
         month: '',
+        today: '',
         filter:{
           Month: null,
           Firm: ''
@@ -265,6 +272,14 @@
         this.report.push(result)
       });
 
+      // Print today date
+      let today = new Date();
+      let dd = String(today.getDate()).padStart(2, '0');
+      let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      let yyyy = today.getFullYear();
+
+      today = dd + '.' + mm + '.' + yyyy;
+      this.today = today;
     },
     methods: {
       changeFilter(){
