@@ -196,7 +196,6 @@
           this.workers.splice(0,this.workers.length);
           ipcRenderer.send('reportWorkerAutocomplete', this.filter.Month);
         }
-        this.report = [];
       },
       report() {
         this.totalSalary();
@@ -209,7 +208,16 @@
       let vm = this;
 
       ipcRenderer.on("reportWorkerAutocomplete:res", function (evt, result) {
-        workers.push(result)
+          let exist = false;
+        if (vm.report.length !== 0) {
+            vm.report.forEach((item) => {
+                if (result.Worker_id === item.Worker_id && result.Month === item.Month && result.Firm === item.Firm) exist = true
+            })
+            if(!exist) workers.push(result)
+        } else {
+            workers.push(result)
+        }
+
       });
 
       ipcRenderer.send("printFirms");
@@ -382,7 +390,7 @@
         return window.moment(parseFloat(value)).format('MM.YYYY')
       },
       numberFormatter(value){
-          return value ? parseInt(value).toLocaleString().replace(',',' ') : '';
+          return value ? parseInt(value).toLocaleString().replace(',',' ') : 0;
       }
     }
   }
