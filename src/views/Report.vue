@@ -59,24 +59,15 @@
 
 
             <div class="report-list" id="print-report">
-                <div class="print">
-                    <h5 class="print-title">Salary List</h5>
-                    <div class="print-data">Date: {{today}}</div>
+                <div class="">
+                    <h5 class="print-title">Výplatní list</h5>
+                    <div class="print-data">datum: {{today}}</div>
                 </div>
 
                 <table class="striped report">
                     <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Month</th>
-                        <th v-if="tab">Firm</th>
-                        <th>Hours</th>
-                        <th>Hour Rate</th>
-                        <th>Salary</th>
-                        <th>Insurance</th>
-                        <th>Deposit</th>
-                        <th>Other</th>
-                        <th>Total</th>
+                      <th v-if="index !== 2 || tab" v-for="(item, index) in tableTrans.czech">{{item}}</th>
                     </tr>
                     </thead>
 
@@ -123,7 +114,7 @@
                     </tr>
                     </tbody>
                 </table>
-                <h5 class="total-money">Total: {{ total | numberFormatter}}</h5>
+                <h5 class="total-money"><span class="no-print">Total: </span>{{ total | numberFormatter}}</h5>
                 <div class="submit-btns no-print">
                     <button class="waves-effect waves-light btn red" @click="reset()">RESET</button>
                     <button v-print="'#print-report'" class="waves-effect waves-light btn"><i class="fas fa-print"></i>Print</button>
@@ -169,6 +160,10 @@
         filter:{
           Month: null,
           Firm: ''
+        },
+        tableTrans: {
+            eng: ['Name', 'Month','Firm','Hours','Hour Rate','Salary','Insurance','Deposit','Other','Total'],
+            czech: ['Jméno', 'Měsíc','Firma','Počet h.','Kč/h','Celkem','Pojištění','Záloha','Jiné','K vyplacení']
         }
       }
     },
@@ -208,7 +203,8 @@
       let vm = this;
 
       ipcRenderer.on("reportWorkerAutocomplete:res", function (evt, result) {
-          let exist = false;
+        // Check if worker report already in the report list.
+        let exist = false;
         if (vm.report.length !== 0) {
             vm.report.forEach((item) => {
                 if (result.Worker_id === item.Worker_id && result.Month === item.Month && result.Firm === item.Firm) exist = true

@@ -64,21 +64,37 @@
 
 .print-title
   text-align: center
+  font-size: 18px
+  font-weight bold
+
 .print-data
-  font-size: 12px
+  font-size: 10px
   margin-bottom: 5px
+  font-weight bold
 
 .report-list
   margin-top: 40px
   @media print
     font-size: 10px
 
+    td, th
+      text-align center
+
+    td:first-child, th:first-child
+      text-align left
+
+    td:nth-last-child(2),
+    th:last-child
+      text-align right
+
     .total-money
-      font-size 18px
+      font-size 10px
       padding-bottom 5px
       margin-right: 0
-      border-bottom 1px solid black
       float right
+      font-weight bold
+      margin-top: 10px
+      padding-right: 5px
 
     tbody
       tr
@@ -129,8 +145,6 @@
     display: block
 
   .striped.report tbody
-    //tr
-    //  border-top: 1px solid black
     tr:nth-child(odd)
       background-color: rgba(242,242,242,0.7)
       -webkit-print-color-adjust: exact;
