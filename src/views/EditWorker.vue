@@ -22,8 +22,7 @@
                            type="text"
                            class="validate">
                     <label for="last_name" class="active">Birthday</label>
-                    <span v-if="$v.newWorker.Age.$dirty && !$v.newWorker.Age.required" class="danger">This field is required</span>
-                    <span v-if="$v.newWorker.Age.$dirty && !$v.newWorker.Age.isDate && $v.newWorker.Age.required" class="danger">Enter a valid birthday DD.MM.YYYY</span>
+                    <span v-if="$v.newWorker.Age.$dirty && !$v.newWorker.Age.isDate" class="danger">Enter a valid birthday DD.MM.YYYY</span>
 
                 </div>
                 <div class="input-field col s12 m6">
@@ -121,9 +120,8 @@
           required
         },
         Age: {
-          required,
           isDate(value){
-            return isDate(value)
+            return value !== '' ? isDate(value) : true
           }
         },
         startDate: {

@@ -5,8 +5,8 @@ import * as path from 'path'
 import { format as formatUrl } from 'url'
 import {
   createProtocol,
-  installVueDevtools
 } from 'vue-cli-plugin-electron-builder/lib'
+import installExtension from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 if (isDevelopment) {
   // Don't load any native (external) modules until the following line is run:
@@ -75,7 +75,10 @@ app.on('activate', () => {
 app.on('ready', async () => {
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
-    await installVueDevtools()
+    await installExtension({
+      id: 'ljjemllljcmogpfapbkkighbhhppjdbg',
+      electron: '>=1.2.1'
+    })
   }
   mainWindow = createMainWindow()
 })

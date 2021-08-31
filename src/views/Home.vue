@@ -345,6 +345,7 @@
     },
     filters:{
       ageFromBirth(val){
+        if (!val) return ''
         let parts = val.split('.');
         let birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
         let ageDate = new Date(Date.now() - birthDate.getTime());
