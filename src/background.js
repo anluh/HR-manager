@@ -24,8 +24,15 @@ protocol.registerStandardSchemes(['app'], { secure: true })
 function createMainWindow () {
   const window = new BrowserWindow({
     icon: __dirname + 'assets/logo.png',
-    title: 'HR Manager'
+    title: 'HR Manager',
+    webPreferences: {
+      enableRemoteModule: true,
+      nodeIntegration: true
+    }
   })
+
+  // Remove menu bar
+  // window.setMenu(null)
 
   if (isDevelopment) {
     // Load the url of the dev server if in development mode
@@ -84,7 +91,7 @@ app.on('ready', async () => {
   mainWindow = createMainWindow()
 })
 
-// ================= API functionality =================
+// ================= Database functionality =================
 
 process.setMaxListeners(100);
 
@@ -93,10 +100,15 @@ const pathDatabase = path.join(path.dirname((electron.app || electron.remote.app
 let db = new sqlite3.Database(pathDatabase)
 
 ipcMain.on("ChangeCurrentDB", () => {
-  db = new sqlite3.Database(pathDatabase)
+  db = new sqlite3.Database(pathDatabase, sqlite3.OPEN_READWRITE, (err) => {
+    if (err) console.error(err)
+  })
+
   console.log('Database switched to new one')
   mainWindow.webContents.send("ChangeCurrentDB:res");
 });
+
+// ================= API functionality =================
 
 ipcMain.on("printWorkers", (event, arg) => {
   let pageOffset = arg.currentPage * arg.perPage - arg.perPage;

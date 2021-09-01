@@ -27,7 +27,6 @@ function dateFormat(t, a, s) {
   return a.map(format).join(s);
 }
 
-
 function CreateDatabase(db, callback) {
   db.serialize(async function () {
     await dbRunPromise(db, `CREATE TABLE IF NOT EXISTS Deposits
@@ -42,7 +41,6 @@ function CreateDatabase(db, callback) {
                 PRIMARY KEY (Id)
             )`
     )
-
     await dbRunPromise(db, `CREATE TABLE IF NOT EXISTS  Firms
             (
                 \`Id\`      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -51,7 +49,6 @@ function CreateDatabase(db, callback) {
                 \`Active\`  INTEGER NOT NULL
             )`
     )
-
     await dbRunPromise(db, `CREATE TABLE IF NOT EXISTS  History
             (
                 \`Id\`          INTEGER NOT NULL,
@@ -64,7 +61,6 @@ function CreateDatabase(db, callback) {
                 PRIMARY KEY (Id)
             )`
     )
-
     await dbRunPromise(db,`CREATE TABLE IF NOT EXISTS Reports (
           \t\`Id\`\tINTEGER NOT NULL,
           \t\`Worker_name\`\tTEXT NOT NULL,
@@ -81,7 +77,6 @@ function CreateDatabase(db, callback) {
           \tPRIMARY KEY(Id)
           )`
     )
-
     await dbRunPromise(db,`CREATE TABLE IF NOT EXISTS Workers (
           \t\`Id\`\tINTEGER NOT NULL UNIQUE,
           \t\`Name\`\tTEXT NOT NULL,
@@ -105,19 +100,12 @@ function CreateDatabase(db, callback) {
 
 // Create default database if not exist on app start
 export function CreateDefaultDataBase() {
-  
-
-  if (fs.existsSync(dbFile)) {
+  let db = new sqlite3.Database(dbFile, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+    if (err) console.error(err.message)
+  });
+  CreateDatabase(db, () => {
     ipcRenderer.send('ChangeCurrentDB');
-  } else {
-    let db = new sqlite3.Database(dbFile, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-      if (err) console.error(err.message)
-    });
-
-    CreateDatabase(db, () => {
-      ipcRenderer.send('ChangeCurrentDB');
-    })
-  }
+  })
 }
 
 export async function CreateNewDataBase(cb) {
@@ -133,7 +121,6 @@ export async function CreateNewDataBase(cb) {
 
   fs.copyFile(dbFile, dumpFilePath, (err) => {
     if (err) throw err
-    console.log('DB copied')
   })
 
   let db = new sqlite3.Database(dbFile, sqlite3.OPEN_READWRITE, (err) => {
@@ -150,4 +137,26 @@ export async function CreateNewDataBase(cb) {
     cb()
   })
 
+}
+
+export function ImportDataBase(newDb) {
+  if (!newDb) return false
+
+  fs.unlink(dbFile, (err) => {
+    if (err) console.log(err)
+  })
+
+  fs.copyFile(newDb, dbFile, (err) => {
+    if (err) throw err
+    console.log('DB copied')
+    ipcRenderer.send('ChangeCurrentDB');
+  })
+}
+
+export function ExportDataBase(newDb) {
+  if (!newDb) return false
+
+  fs.copyFile(dbFile, newDb, (err) => {
+    return err ? err : true
+  })
 }
