@@ -12,7 +12,8 @@ if (isDevelopment) {
   // Don't load any native (external) modules until the following line is run:
   require('module').globalPaths.push(process.env.NODE_MODULES_PATH)
 }
-
+import electron from "electron";
+let sqlite3 = require('sqlite3').verbose();
 
 
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
@@ -87,9 +88,15 @@ app.on('ready', async () => {
 
 process.setMaxListeners(100);
 
+const pathDatabase = path.join(path.dirname((electron.app || electron.remote.app).getPath('exe')), 'database.sqlite')
 
-let sqlite3 = require('sqlite3').verbose();
-let db = new sqlite3.Database('./database.sqlite')
+let db = new sqlite3.Database(pathDatabase)
+
+ipcMain.on("ChangeCurrentDB", () => {
+  db = new sqlite3.Database(pathDatabase)
+  console.log('Changed DB')
+  mainWindow.webContents.send("ChangeCurrentDB:res");
+});
 
 ipcMain.on("printWorkers", (event, arg) => {
   let pageOffset = arg.currentPage * arg.perPage - arg.perPage;

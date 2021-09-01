@@ -19,3 +19,7 @@ npm run build:electron
 ```
 npm run lint
 ```
+---
+## Database
+`database.sqlite` should be under `node_modules/electron/dist` folder.
+After `npm install` you can copy from `root` folder to `node_modules/electron/dist`

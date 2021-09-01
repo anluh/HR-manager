@@ -9,6 +9,8 @@
 
             <h3>Workers: {{ workers }}</h3>
             <h3>Firms: {{ firms }}</h3>
+
+          <button class="btn-large waves-effect waves-light" @click="CreateDatabase()">Create new database</button>
         </div>
 
     </div>
@@ -17,6 +19,7 @@
 <script>
   // @ is an alias to /src
 
+  import {CreateDefaultDataBase} from '../database'
   const electron = require('electron');
   const {ipcRenderer} = electron;
 
@@ -39,6 +42,12 @@
         this.firms = result
       });
 
+    },
+    methods: {
+      CreateDatabase() {
+        console.log('Creating database file...')
+        CreateDefaultDataBase()
+      }
     }
 
   }

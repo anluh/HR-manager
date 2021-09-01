@@ -9,16 +9,27 @@
       <router-link to="/report"><div class="nav__item"><i class="fas fa-hand-holding-usd"></i><span>Report</span></div></router-link>
       <a class="toogle-menu"><i @click="navCollapsed ? navCollapsed = false : navCollapsed = true" class="fas fa-chevron-circle-down"></i></a>
     </div>
-    <div id="router-view">
+    <div v-if="dataBaseExist" id="router-view">
       <router-view/>
     </div>
   </div>
 </template>
 
 <script>
+  import {CreateDefaultDataBase} from "./database";
+  const electron = require('electron');
+  const {ipcRenderer} = electron;
+
   export default {
+    mounted() {
+      CreateDefaultDataBase()
+      ipcRenderer.on('ChangeCurrentDB:res', () => {
+        this.dataBaseExist = true
+      });
+    },
     data() {
       return {
+        dataBaseExist: false,
         navCollapsed: false
       }
     }
