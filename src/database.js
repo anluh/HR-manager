@@ -4,7 +4,10 @@ import electron from 'electron'
 const { ipcRenderer } = electron;
 let sqlite3 = require('sqlite3').verbose();
 
-const CreateTable = (db, sql_query) =>  new Promise((resolve, reject) => {
+let dbPath = path.dirname((electron.app || electron.remote.app).getPath("exe"))
+let dbFile = path.join(dbPath, 'database.sqlite')
+
+const dbRunPromise = (db, sql_query) =>  new Promise((resolve, reject) => {
     try {
       db.run(sql_query, (err) => {
         if (err) reject(err)
@@ -16,11 +19,18 @@ const CreateTable = (db, sql_query) =>  new Promise((resolve, reject) => {
     }
   })
 
+function dateFormat(t, a, s) {
+  function format(m) {
+    let f = new Intl.DateTimeFormat('en', m);
+    return f.format(t);
+  }
+  return a.map(format).join(s);
+}
 
 
 function CreateDatabase(db, callback) {
   db.serialize(async function () {
-    await CreateTable(db, `CREATE TABLE IF NOT EXISTS Deposits
+    await dbRunPromise(db, `CREATE TABLE IF NOT EXISTS Deposits
             (
                 \`Id\`          INTEGER NOT NULL,
                 \`Worker_id\`   INTEGER NOT NULL,
@@ -33,7 +43,7 @@ function CreateDatabase(db, callback) {
             )`
     )
 
-    await CreateTable(db, `CREATE TABLE IF NOT EXISTS  Firms
+    await dbRunPromise(db, `CREATE TABLE IF NOT EXISTS  Firms
             (
                 \`Id\`      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                 \`Name\`    TEXT    NOT NULL UNIQUE,
@@ -42,7 +52,7 @@ function CreateDatabase(db, callback) {
             )`
     )
 
-    await CreateTable(db, `CREATE TABLE IF NOT EXISTS  History
+    await dbRunPromise(db, `CREATE TABLE IF NOT EXISTS  History
             (
                 \`Id\`          INTEGER NOT NULL,
                 \`Worker_id\`   INTEGER NOT NULL,
@@ -55,7 +65,7 @@ function CreateDatabase(db, callback) {
             )`
     )
 
-    await CreateTable(db,`CREATE TABLE IF NOT EXISTS Reports (
+    await dbRunPromise(db,`CREATE TABLE IF NOT EXISTS Reports (
           \t\`Id\`\tINTEGER NOT NULL,
           \t\`Worker_name\`\tTEXT NOT NULL,
           \t\`Worker_id\`\tTEXT NOT NULL,
@@ -72,7 +82,7 @@ function CreateDatabase(db, callback) {
           )`
     )
 
-    await CreateTable(db,`CREATE TABLE IF NOT EXISTS Workers (
+    await dbRunPromise(db,`CREATE TABLE IF NOT EXISTS Workers (
           \t\`Id\`\tINTEGER NOT NULL UNIQUE,
           \t\`Name\`\tTEXT NOT NULL,
           \t\`Age\`\tTEXT,
@@ -93,45 +103,51 @@ function CreateDatabase(db, callback) {
 
 }
 
+// Create default database if not exist on app start
 export function CreateDefaultDataBase() {
-  let filePath = path.dirname((electron.app || electron.remote.app).getPath("exe"))
-  let file = path.join(filePath, 'database.sqlite')
+  
 
-  let db = new sqlite3.Database(file, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-    if (err) console.error(err.message)
-  });
-
-  CreateDatabase(db, () => {
-    console.log('Promises ended')
+  if (fs.existsSync(dbFile)) {
     ipcRenderer.send('ChangeCurrentDB');
-  })
+  } else {
+    let db = new sqlite3.Database(dbFile, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+      if (err) console.error(err.message)
+    });
+
+    CreateDatabase(db, () => {
+      ipcRenderer.send('ChangeCurrentDB');
+    })
+  }
 }
 
-export function CreateNewDataBase() {
-  let filePath = path.dirname(require('electron').remote.app.getPath("exe")) + '/dumps'
-  if (!fs.existsSync(filePath)) fs.mkdir(filePath, (err) => {
+export async function CreateNewDataBase(cb) {
+  let dumpPath = dbPath + '/dumps'
+  if (!fs.existsSync(dumpPath)) fs.mkdir(dumpPath, (err) => {
     if (err) return console.log(err)
   })
 
-  function join(t, a, s) {
-    function format(m) {
-      let f = new Intl.DateTimeFormat('en', m);
-      return f.format(t);
-    }
-    return a.map(format).join(s);
-  }
+  const a = [{day: '2-digit'}, {month: '2-digit'}, {year: '2-digit'}];
+  const b = [{hour: '2-digit'}, {minute: '2-digit'}, {second: '2-digit'}];
+  const fileName = dateFormat(new Date, a, '-') + "-" + dateFormat(new Date, b, ':');
+  const dumpFilePath = path.join(dumpPath, fileName + '.sqlite')
 
-  let a = [{day: 'numeric'}, {month: 'numeric'}, {year: 'numeric'}];
-  let fileName = join(new Date, a, '-') + "-" + +new Date();
+  fs.copyFile(dbFile, dumpFilePath, (err) => {
+    if (err) throw err
+    console.log('DB copied')
+  })
 
-  let file = path.join(filePath, fileName + '.sqlite')
-
-  let db = new sqlite3.Database(file, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+  let db = new sqlite3.Database(dbFile, sqlite3.OPEN_READWRITE, (err) => {
     if (err) console.error(err.message)
   });
 
-  CreateDatabase(db)
+  await db.serialize(function () {
+    dbRunPromise(db, `DROP TABLE IF EXISTS Deposits;`)
+    dbRunPromise(db, `DROP TABLE IF EXISTS History;`)
+    dbRunPromise(db, `DROP TABLE IF EXISTS Reports;`)
+  })
 
-  // ipcRenderer.send('ChangeCurrentDB');
+  CreateDatabase(db, () => {
+    cb()
+  })
 
 }

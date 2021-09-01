@@ -94,7 +94,7 @@ let db = new sqlite3.Database(pathDatabase)
 
 ipcMain.on("ChangeCurrentDB", () => {
   db = new sqlite3.Database(pathDatabase)
-  console.log('Changed DB')
+  console.log('Database switched to new one')
   mainWindow.webContents.send("ChangeCurrentDB:res");
 });
 

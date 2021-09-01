@@ -11,6 +11,7 @@
             <h3>Firms: {{ firms }}</h3>
 
           <button class="btn-large waves-effect waves-light" @click="CreateDatabase()">Create new database</button>
+          <button class="btn-large waves-effect waves-light" @click="ExportDatabase()">Export database</button>
         </div>
 
     </div>
@@ -19,9 +20,9 @@
 <script>
   // @ is an alias to /src
 
-  import {CreateDefaultDataBase} from '../database'
+  import {CreateNewDataBase} from '../database'
   const electron = require('electron');
-  const {ipcRenderer} = electron;
+  const {ipcRenderer, dialog} = electron;
 
 
   export default {
@@ -46,8 +47,10 @@
     methods: {
       CreateDatabase() {
         console.log('Creating database file...')
-        CreateDefaultDataBase()
-      }
+        CreateNewDataBase(() => {
+          window.location.reload(true)
+        })
+      },
     }
 
   }
