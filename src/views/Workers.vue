@@ -2,7 +2,7 @@
     <div class="home">
 
         <div class="page-title">
-            <h3>Workers List</h3>
+            <h3>Workers</h3>
         </div>
 
         <div class="view-wrapper">
@@ -72,7 +72,27 @@
 
             </div>
 
-            <table class="striped table-list worker-list" cellspacing="0" cellpadding="0">
+          <div class="pagination-section">
+            <div class="items-per-page">
+              <span>Items per page</span>
+              <div class="input-field col s12 m6">
+                <select v-model="pagination.perPage" @change="fetchWorkers(1)">
+                  <option value="30" selected>30</option>
+                  <option value="50">50</option>
+                  <option value="80">80</option>
+                </select>
+              </div>
+            </div>
+            <pagination
+                :current="pagination.currentPage"
+                :total="pagination.totalItems"
+                :per-page="pagination.perPage"
+                @page-changed="paginationMethod">
+            </pagination>
+          </div>
+
+
+          <table class="striped table-list worker-list" cellspacing="0" cellpadding="0">
                 <thead>
                 <tr>
                     <th>№</th>
@@ -107,26 +127,24 @@
                 </tr>
                 </tbody>
             </table>
-
-            <div class="pagination-section">
-                <div class="items-per-page">
-                    <span>Items per page</span>
-                    <div class="input-field col s12 m6">
-                        <select v-model="pagination.perPage" @change="fetchWorkers(1)">
-                            <option value="10" selected>10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                </div>
-                <pagination
-                        :current="pagination.currentPage"
-                        :total="pagination.totalItems"
-                        :per-page="pagination.perPage"
-                        @page-changed="paginationMethod">
-                </pagination>
+          <div class="pagination-section">
+            <div class="items-per-page">
+              <span>Items per page</span>
+              <div class="input-field col s12 m6">
+                <select v-model="pagination.perPage" @change="fetchWorkers(1)">
+                  <option value="30" selected>30</option>
+                  <option value="50">50</option>
+                  <option value="80">80</option>
+                </select>
+              </div>
             </div>
+            <pagination
+                :current="pagination.currentPage"
+                :total="pagination.totalItems"
+                :per-page="pagination.perPage"
+                @page-changed="paginationMethod">
+            </pagination>
+          </div>
 
         </div>
 
@@ -169,7 +187,7 @@
         },
         pagination: {
           totalItems: 0,
-          perPage: 10,
+          perPage: 30,
           currentPage: 1
         }
       }

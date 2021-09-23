@@ -100,9 +100,7 @@ const pathDatabase = path.join(path.dirname((electron.app || electron.remote.app
 let db = new sqlite3.Database(pathDatabase)
 
 ipcMain.on("ChangeCurrentDB", () => {
-  db = new sqlite3.Database(pathDatabase, sqlite3.OPEN_READWRITE, (err) => {
-    if (err) console.error(err)
-  })
+  db = new sqlite3.Database(pathDatabase)
 
   console.log('Database switched to new one')
   mainWindow.webContents.send("ChangeCurrentDB:res");
@@ -118,7 +116,7 @@ ipcMain.on("printWorkers", (event, arg) => {
     db.each(`SELECT count(*) FROM Workers`, (err, rows) => {
       totalItems = rows['count(*)'];
     });
-    db.each(`SELECT * FROM Workers ORDER BY Id DESC LIMIT ${arg.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+    db.each(`SELECT * FROM Workers ORDER BY Name ASC LIMIT ${arg.perPage} OFFSET ${pageOffset}`, (err, rows) => {
       let response = {};
       response.totalItems = totalItems;
       response.rows = rows;
@@ -137,6 +135,7 @@ ipcMain.on("autocompleteWorkers", (event, arg) => {
 });
 
 ipcMain.on("printWorkersFilter", (event, arg) => {
+  console.log(arg)
   let pageOffset = arg.pagination.currentPage * arg.pagination.perPage - arg.pagination.perPage;
   let filter = {};
   let dateFilter = '';
@@ -422,8 +421,9 @@ ipcMain.on("edit-worker", (event, arg) => {
   });
 });
 
-// ============= Salary API ==============
+// ============= Hours API ==============
 ipcMain.on("add-salary", function (event, arg){
+  arg.Hours = arg.Hours.replace(',','.')
   db.serialize(function () {
     // If hours added to worker in current month -> show err
     db.each(`SELECT count(*) FROM History WHERE Worker_id=${arg.Worker.Id} AND Firm='${arg.Firm}' AND Month=${parseFloat(arg.MonthStart)}`, (err, rows) => {
@@ -448,9 +448,9 @@ ipcMain.on("add-salary", function (event, arg){
 ipcMain.on("fetchSalaryHistory", function(event, arg) {
   let query = '';
   if (arg){
-    query = `AND Month = ${parseFloat(arg)} ORDER BY Id DESC`
+    query = `AND Month = ${parseFloat(arg)} ORDER BY Worker_name ASC`
   } else {
-    query = `ORDER BY Id DESC LIMIT 20`
+    query = `ORDER BY Worker_name ASC LIMIT 50`
   }
   db.serialize(function(){
     db.each(`SELECT * FROM History WHERE Hours != '' ${query}`, (err, rows) => {
@@ -518,6 +518,7 @@ ipcMain.on("autocompleteWorkersDeposit", function() {
 ipcMain.on("add-deposit", function (event, arg){
   let errors = [];
   console.log(arg);
+  if(!arg.Comment) arg.Comment = ''
 
   db.serialize(function () {
     db.run(`INSERT into Deposits (Worker_id, Worker_name, Date, Money, Comment) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseFloat(arg.Date)}, ${parseFloat(arg.Money)}, '${arg.Comment}')`, function(err){
@@ -631,6 +632,7 @@ ipcMain.on("reportWorkerData", function(event, arg) {
 ipcMain.on("saveReport", function (event, arg){
   db.serialize(function () {
     if(!arg.Other) arg.Other = 0;
+    if(!arg.Insurance) arg.Insurance = 0;
     db.run(`INSERT into Reports (Worker_name, Worker_id, Firm, Month, Rate, Hours, Salary, Insurance, Deposit, Other, Total) values('${arg.Worker_name}', '${arg.Worker_id}', '${arg.Firm}', ${parseFloat(arg.Month)}, ${parseFloat(arg.Rate)}, ${parseFloat(arg.Hours)}, ${parseFloat(arg.Salary)}, ${parseFloat(arg.Insurance)}, '${arg.Deposit}', ${parseFloat(arg.Other)}, ${parseFloat(arg.Total)})`, function(err){
       if(err) console.log(err);
     });

@@ -1,5 +1,5 @@
 <template>
-    <div :class="typeaheadState" class="autocomplete">
+    <div :class="typeaheadState" class="autocomplete" @focus="onFocus">
         <div class="input-field" ref="toggle" @mousedown.prevent="toggle">
             <input type="text" id="search" class="typeahead__search" ref="search"
                    v-model="search"
@@ -104,6 +104,7 @@
       },
       onFocus() {
         this.open = true
+        this.$refs.search.focus()
       },
       onBlur() {
         // this.search = '';

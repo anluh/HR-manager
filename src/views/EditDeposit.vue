@@ -6,7 +6,7 @@
 
         <div class="salary__wrapper container">
 
-            <form class="add-deposit" @submit.prevent="$v.newDeposit.$touch(); $v.date.$touch(); if(!$v.newDeposit.$invalid){saveDeposit(); $v.newDeposit.$reset(); $v.date.$reset()}">
+            <form class="add-deposit" @submit.prevent="$v.newDeposit.$touch(); if(!$v.newDeposit.$invalid){saveDeposit(); $v.newDeposit.$reset();}">
                 <div class="input-field">
                     <input id="add-deposit__name"
                            :value="newDeposit.Worker_name"
@@ -16,12 +16,10 @@
                 </div>
                 <div class="input-field">
                     <input id="add-deposit__date"
-                           v-model.lazy="date"
-                           :class="{ invalid: !$v.date.isDate && $v.date.required, valid: $v.date.isDate && $v.date.required }"
+                           :value="date"
+                           disabled
                            type="text">
                     <label class="active" for="add-deposit__date">Date</label>
-                    <span class="error danger" v-show="$v.date.$dirty && !$v.date.required">This field is required</span>
-                    <span class="error danger" v-show="!$v.date.isDate && $v.date.required">Enter valid date DD.MM.YYYY</span>
                 </div>
                 <div class="input-field">
                     <input id="add-deposit__hours" v-model="newDeposit.Money" type="text">
@@ -50,9 +48,6 @@
   const {ipcRenderer} = require('electron');
   import { required, decimal } from 'vuelidate/lib/validators'
 
-
-  const isDate = (value) => moment(value, 'DD.MM.YYYY', true).isValid();
-
   export default {
     name: "editdeposit",
     data() {
@@ -63,25 +58,10 @@
       }
     },
     validations: {
-      date:{
-        required,
-        isDate(value){
-          return isDate(value)
-        },
-      },
       newDeposit: {
         Money: {
           required,
           decimal
-        }
-      }
-    },
-    watch: {
-      date(value) {
-        if(value){
-          this.newDeposit.Date = moment(value, 'DD.MM.YYYY').valueOf();
-        } else {
-          this.newDeposit.Date = ''
         }
       }
     },

@@ -131,6 +131,7 @@ export async function CreateNewDataBase(cb) {
     dbRunPromise(db, `DROP TABLE IF EXISTS Deposits;`)
     dbRunPromise(db, `DROP TABLE IF EXISTS History;`)
     dbRunPromise(db, `DROP TABLE IF EXISTS Reports;`)
+    dbRunPromise(db, `UPDATE Workers SET Deposit=0`)
   })
 
   CreateDatabase(db, () => {

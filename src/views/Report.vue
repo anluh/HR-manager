@@ -67,7 +67,7 @@
                 <table class="striped report">
                     <thead>
                     <tr>
-                      <th v-if="index !== 2 || tab" v-for="(item, index) in tableTrans.czech">{{item}}</th>
+                      <th v-if="index !== 2 || tab" v-for="(item, index) in tableTrans.czech" :key="item">{{item}}</th>
                     </tr>
                     </thead>
 
@@ -80,7 +80,7 @@
                         <td class="rate-td">
                             <div class="input-field rate-input no-print">
                                 <input :class="{ disabled: reportWorker.disableDelete }"
-                                       v-model.lazy="reportWorker.Rate"
+                                       v-model="reportWorker.Rate"
                                        @load="countTotal(reportWorker)"
                                        @change="countTotal(reportWorker)"
                                        type="text">
@@ -91,7 +91,7 @@
                         <td>
                             <div class="input-field rate-input no-print">
                                 <input :class="{ disabled: reportWorker.disableDelete }"
-                                       v-model.lazy="reportWorker.Insurance"
+                                       v-model="reportWorker.Insurance"
                                        @load="countTotal(reportWorker)"
                                        @change="countTotal(reportWorker)"
                                        type="text">
@@ -102,7 +102,7 @@
                         <td class="rate-td">
                             <div class="input-field rate-input no-print">
                                 <input :class="{ disabled: reportWorker.disableDelete }"
-                                       v-model.lazy="reportWorker.Other"
+                                       v-model="reportWorker.Other"
                                        @change="countTotal(reportWorker)" type="text">
                             </div>
                             <div class="print">{{ reportWorker.Other | numberFormatter }}</div>
@@ -192,9 +192,12 @@
           ipcRenderer.send('reportWorkerAutocomplete', this.filter.Month);
         }
       },
-      report() {
-        this.totalSalary();
-        this.checkRate();
+      report: {
+        deep: true,
+        handler() {
+          this.totalSalary();
+          this.checkRate();
+        }
       }
     },
     created() {
@@ -233,15 +236,19 @@
       });
 
       ipcRenderer.on("reportWorkerData:res", (evt, result) => {
-        let hours = result.Hours;
 
-        if(hours >= 0 && hours <= 100){
-          result.Insurance = 100
-        } else if(hours > 100 && hours <= 170){
-          result.Insurance = 150
-        } else if(hours > 170){
-          result.Insurance = 200
-        }
+        // let hours = result.Hours;
+        // if(hours >= 0 && hours <= 100){
+        //   result.Insurance = 100
+        // } else if(hours > 100 && hours <= 170){
+        //   result.Insurance = 150
+        // } else if(hours > 170){
+        //   result.Insurance = 200
+        // }
+
+        result.Insurance = 0
+        result.Other = 0
+        result.Hours = parseFloat((''+result.Hours).replace(',','.'))
 
 
         if(!result.Deposit){
@@ -386,7 +393,7 @@
         return window.moment(parseFloat(value)).format('MM.YYYY')
       },
       numberFormatter(value){
-          return value ? parseInt(value).toLocaleString().replace(',',' ') : 0;
+          return value ? parseFloat(value).toLocaleString().replace(',',' ') : 0;
       }
     }
   }

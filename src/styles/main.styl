@@ -162,13 +162,16 @@ body
   text-align left
 
 .page-title
-  height: 120px
+  height: 60px
   background: $main-light
   color: #FFF
   display: flex
   align-items: center
   justify-content: center
-  margin-bottom: 50px
+  margin-bottom: 10px
+
+  h3
+    font-size: 30px
 
 .home
   text-align left
@@ -277,6 +280,14 @@ body
       font-size: 14px
       margin-right: 5px
 
+.dropdown-content
+  li
+    &:focus
+      background-color: rgba(#26a69a, .3) !important
+    &.selected
+      background-color: #26a69a !important
+      span
+        color: white
 //Pagination
 .pagination-section
   display: flex
