@@ -100,7 +100,7 @@ const pathDatabase = path.join(path.dirname((electron.app || electron.remote.app
 let db = new sqlite3.Database(pathDatabase)
 
 ipcMain.on("ChangeCurrentDB", () => {
-  db = new sqlite3.Database(pathDatabase)
+  // db = new sqlite3.Database(pathDatabase)
 
   console.log('Database switched to new one')
   mainWindow.webContents.send("ChangeCurrentDB:res");
@@ -245,10 +245,10 @@ ipcMain.on("printWorkersFilter", (event, arg) => {
     } else {
       db.serialize(function () {
         let totalItems = 0;
-        db.each(`SELECT count(*) FROM Workers WHERE ${dateFilter}`, (err, rows) => {
+        db.each(`SELECT count(*) FROM Workers WHERE ${dateFilter} ORDER BY Name ASC`, (err, rows) => {
           totalItems = rows['count(*)'];
         });
-        db.each(`SELECT * FROM Workers WHERE ${dateFilter} ORDER BY Id DESC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+        db.each(`SELECT * FROM Workers WHERE ${dateFilter} ORDER BY Name ASC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
           let response = {};
           response.totalItems = totalItems;
           response.rows = rows;
@@ -266,10 +266,10 @@ ipcMain.on("workerFilterActive", (event, arg) => {
 
   db.serialize(function () {
     let totalItems = 0;
-    db.each(`SELECT count(*) FROM Workers WHERE Active = ${parseFloat(arg.filterBy.Active)}`, (err, rows) => {
+    db.each(`SELECT count(*) FROM Workers WHERE Active = ${parseFloat(arg.filterBy.Active)} ORDER BY Name ASC`, (err, rows) => {
       totalItems = rows['count(*)'];
     });
-    db.each(`SELECT * FROM Workers WHERE Active = ${parseFloat(arg.filterBy.Active)} ORDER BY Id DESC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+    db.each(`SELECT * FROM Workers WHERE Active = ${parseFloat(arg.filterBy.Active)} ORDER BY Name ASC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
       let response = {};
       response.totalItems = totalItems;
       response.rows = rows;
@@ -281,7 +281,7 @@ ipcMain.on("workerFilterActive", (event, arg) => {
 
 ipcMain.on("printFirms", function() {
   db.serialize(function(){
-    db.each("SELECT * FROM Firms", (err, rows) => {
+    db.each("SELECT * FROM Firms ORDER BY Name ASC", (err, rows) => {
       mainWindow.webContents.send("printFirms:res", rows);
     })
   });
