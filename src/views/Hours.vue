@@ -9,7 +9,7 @@
         <div v-if="hoursErr" class="toast toast--error">Hours on this month are already added.</div>
       </transition>
       <div class="input-field add-salary__month">
-        <date-picker type="month" v-model="month" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" />
+        <date-picker type="month" v-model="month" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" :append-to-body="false"/>
       </div>
       <form class="add-salary"
             @submit.prevent="$v.$touch(); if(!$v.newHourRow.$invalid){saveSalary(); $v.newHourRow.$reset()}">

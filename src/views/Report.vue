@@ -11,19 +11,20 @@
             </div>
 
             <div class="select-worker-wrapper">
-
                 <div class="input-field select-worker__month">
-                    <input id="select-worker__month"
-                           v-model.lazy="month"
-                           :class="{ invalid: !$v.month.isDate && $v.month.required, valid: $v.month.isDate && $v.month.required, disabled: disableFirms }"
-                           type="text">
-                    <label for="select-worker__month">Month</label>
-                    <span class="error danger" v-show="!$v.month.isDate && $v.month.required">Enter valid month MM.YYYY</span>
+                  <date-picker type="month" v-model="month" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" :append-to-body="false" />
                 </div>
 
                 <span v-if="tab">Chose Worker:</span>
                 <div v-if="tab" class="select-worker__auto">
                     <autocomplete :options="workers" v-model="workerAutocomplete" @input="addToReportAutocomp"></autocomplete>
+                    <!-- <multiselect
+                        v-model="workerAutocomplete"
+                        label="Worker_name"
+                        placeholder="Worker"
+                        :options="workers" >
+                    </multiselect>
+                    <button @click="addToReportAutocomp">Add</button> -->
                 </div>
 
             </div>

@@ -291,7 +291,7 @@ ipcMain.on("workerFilterActive", (event, arg) => {
 
 ipcMain.on("printFirms", function() {
   db.serialize(function(){
-    db.each("SELECT * FROM Firms ORDER BY Name ASC", (err, rows) => {
+    db.each("SELECT * FROM Firms WHERE Active=1 ORDER BY Name ASC", (err, rows) => {
       mainWindow.webContents.send("printFirms:res", rows);
     })
   });

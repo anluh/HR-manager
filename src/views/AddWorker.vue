@@ -7,68 +7,66 @@
         <div class="container">
             <form v-on:submit.prevent="$v.newWorker.$touch(); if(!$v.newWorker.$invalid){addWorker()}">
                 <div class="input-field col s6 m6">
+                    <label>Name</label> 
                     <input v-model="newWorker.Name"
                            :class="{ invalid: $v.newWorker.Name.$error, valid: !$v.newWorker.Name.$invalid }"
                            id="worker_name"
                            type="text"
                            class="validate">
-                    <label for="worker_name">Name</label>
                     <span v-if="$v.newWorker.Name.$dirty && !$v.newWorker.Name.required" class="danger">This field is required</span>
                 </div>
+                
                 <div class="input-field col s6 m6">
-                    <input v-model="newWorker.Age"
-                           :class="{ invalid: $v.newWorker.Age.$error, valid: !$v.newWorker.Age.$invalid }"
-                           id="last_name"
-                           type="text"
-                           class="validate">
-                    <label for="last_name">Birthday</label>
+                    <label>Birthday</label>
+                    <date-picker class="full-width" type="date" v-model="newWorker.Age" placeholder="DD.MM.YYYY" format="DD.MM.YYYY" value-type="DD.MM.YYYY" :append-to-body="false" />
                     <span v-if="$v.newWorker.Age.$dirty && !$v.newWorker.Age.isDate" class="danger">Enter a valid birthday DD.MM.YYYY</span>
-
                 </div>
+
                 <div class="input-field col s12 m6">
-                    <select v-model="newWorker.Sex">
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
                     <label>Sex</label>
+                    <multiselect
+                        class="full-width"
+                        v-model="newWorker.Sex"
+                        placeholder="Sex"
+                        :options="['Male', 'Femail']" >
+                    </multiselect>
                 </div>
 
                 <div class="input-field col s12 m6">
-                    <select v-model="newWorker.Firm">
-                        <option :value="firmNone">None</option>
-                        <option :value="firm" v-for="(firm, index) in firms" v-if="firm.Active === 1" :key="index">{{ firm.Name }}</option>
-                    </select>
                     <label>Firm</label>
+                    <multiselect
+                        class="full-width"
+                        v-model="newWorker.Firm"
+                        label="Name"
+                        placeholder="Firm"
+                        :options="firms" >
+                    </multiselect>
                 </div>
 
                 <div class="input-field col s6 m6">
-                    <input v-model.lazy="newWorker.startDate"
-                           :class="{ invalid: $v.newWorker.startDate.$error, valid: !$v.newWorker.startDate.$invalid }"
-                           id="worker_start"
-                           type="text"
-                           class="validate">
-                    <label for="worker_start">Start</label>
+                    <label>Start</label>
+                    <date-picker class="full-width" type="date" v-model="newWorker.startDate" placeholder="DD.MM.YYYY" format="DD.MM.YYYY" value-type="DD.MM.YYYY" :append-to-body="false" />
                     <span v-if="$v.newWorker.startDate.$dirty && !$v.newWorker.startDate.required" class="danger">This field is required</span>
                     <span v-if="$v.newWorker.startDate.$dirty && !$v.newWorker.startDate.isDate && $v.newWorker.startDate.required" class="danger">Enter a valid date DD.MM.YYYY</span>
-
                 </div>
+
                 <div class="input-field col s6 m6">
-                    <input v-model.lazy="newWorker.endDate"
-                           :class="{ invalid: $v.newWorker.endDate.$error }"
-                           id="worker_end"
-                           class="validate"
-                           type="text">
-                    <label for="worker_end">End</label>
+                    <label>End</label>
+                    <date-picker class="full-width" type="date" v-model="newWorker.endDate" placeholder="DD.MM.YYYY" format="DD.MM.YYYY" value-type="DD.MM.YYYY" :append-to-body="false" />
                     <span v-if="$v.newWorker.endDate.$dirty && !$v.newWorker.endDate.isDate" class="danger">Enter a valid date DD.MM.YYYY</span>
                     <span v-if="$v.newWorker.endDate.$dirty && $v.newWorker.endDate.isDate && $v.newWorker.startDate.required && !$v.newWorker.endDate.minDate" class="danger">Enter a valid end date</span>
-
                 </div>
+                
+
                 <div class="input-field col s12 m6">
-                    <select v-model="newWorker.Active">
-                        <option value="1">Active</option>
-                        <option value="0">Inactive</option>
-                    </select>
                     <label>Status</label>
+                    <multiselect
+                        class="full-width"
+                        v-model="newWorker.Active"
+                        placeholder="Status"
+                        label="label"
+                        :options="[{label: 'Active', value: 1 }, {label:'Inactive', value:0}]" >
+                    </multiselect>
                 </div>
 
 
@@ -105,7 +103,7 @@
           startDate: '',
           End: null,
           endDate: '',
-          Active: 1
+          Active: { label: 'Active', value: 1 }
         },
         firms: [],
         firmNone:{
@@ -176,7 +174,9 @@
         router.push('/workers');
       },
       addWorker () {
-        ipcRenderer.sendSync('add-worker', this.newWorker) === true ? this.redirect() : console.log("DB Error");
+        let query = this.newWorker
+        query.Active = query.Active.value
+        ipcRenderer.sendSync('add-worker', query) === true ? this.redirect() : console.log("DB Error");
       },
       materializeInit(){
         /* eslint-disable */
