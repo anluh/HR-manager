@@ -8,8 +8,14 @@
 
       <form class="add-deposit"
             @submit.prevent="$v.newDeposit.$touch(); if(!$v.newDeposit.$invalid){saveDeposit(); $v.newDeposit.$reset();}">
+<!--          <autocomplete :options="workers" ref="workerField" v-model="newDeposit.Worker"></autocomplete>-->
         <div class="input-field">
-          <autocomplete :options="workers" ref="workerField" v-model="newDeposit.Worker"></autocomplete>
+        <multiselect
+            v-model="newDeposit.Worker"
+            label="Name"
+            placeholder="Worker"
+            :options="workers" >
+          </multiselect>
           <span class="error danger" v-show="$v.newDeposit.$dirty && !$v.newDeposit.Worker.Name.required">This field is required</span>
         </div>
         <div class="input-field">
@@ -38,6 +44,7 @@
         <table class="striped table-list" cellspacing="0" cellpadding="0">
           <thead>
           <tr>
+            <th></th>
             <th>Name</th>
             <th>Date</th>
             <th>Money</th>
@@ -46,7 +53,8 @@
           </thead>
 
           <tbody>
-          <tr v-for="(history, index) in historys" :key="index">
+          <tr v-for="(history, index) in histories" :key="index">
+            <td class="table-index">{{ index + 1 }}</td>
             <td>{{ history.Worker_name }}</td>
             <td>{{ history.Date | dateFormatter }}</td>
             <td>{{ history.Money }}</td>
@@ -87,7 +95,7 @@ export default {
   data() {
     return {
       workers: [],
-      historys: [],
+      histories: [],
       hideHistory: false,
       newDeposit: {
         Worker: {
@@ -112,17 +120,14 @@ export default {
     }
   },
   created() {
-    let workers = this.workers;
-    let historys = this.historys;
-
     this.fetchAutocompleteWorkersDeposit();
-    ipcRenderer.on("autocompleteWorkersDeposit:res", function (evt, result) {
-      workers.push(result);
+    ipcRenderer.on("autocompleteWorkersDeposit:res", (evt, result) => {
+      this.workers = [...result]
     });
 
     this.fetchDepositHistory();
-    ipcRenderer.on("fetchDepositHistory:res", function (evt, result) {
-      historys.push(result);
+    ipcRenderer.on("fetchDepositHistory:res", (evt, result) => {
+      this.histories = [...result];
     });
   },
   methods: {
@@ -146,7 +151,7 @@ export default {
       ipcRenderer.send('autocompleteWorkersDeposit');
     },
     fetchDepositHistory() {
-      this.historys.splice(0, this.historys.length);
+      this.histories.splice(0, this.histories.length);
       ipcRenderer.send("fetchDepositHistory")
     },
     deleteHistory(history) {

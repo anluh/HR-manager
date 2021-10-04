@@ -40,6 +40,8 @@
 @import "styles/variables.styl";
 @import "styles/fa-icons.min.css";
 @import "styles/materialize.min.css";
+@import "~vue-multiselect/dist/vue-multiselect.min.css"
+@import '~vue2-datepicker/index.css';
 @import "styles/main.styl";
 
 </style>

@@ -68,24 +68,23 @@ export default {
         window.location.reload(true)
       })
     },
-    ImportDatabase() {
-      let importDatabasePath = dialog.showOpenDialog({
+    async ImportDatabase() {
+      let importDatabasePath = await dialog.showOpenDialog({
         properties: ['openFile'],
         filters: [
           {name: 'Database', extensions: ['sqlite']}
         ]
       })
-
-      ImportDataBase(...importDatabasePath)
+      ImportDataBase(...importDatabasePath.filePaths)
     },
-    ExportDatabase() {
-      let saveDatabasePath = dialog.showSaveDialog({
+    async ExportDatabase() {
+      let saveDatabasePath = await dialog.showSaveDialog({
         properties: ['openFile'],
         filters: [
           {name: 'Database', extensions: ['sqlite']}
         ]
       })
-      ExportDataBase(saveDatabasePath)
+      ExportDataBase(saveDatabasePath.filePath + '.sqlite')
     }
   }
 

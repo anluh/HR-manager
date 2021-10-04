@@ -7,6 +7,8 @@ let sqlite3 = require('sqlite3').verbose();
 let dbPath = path.dirname((electron.app || electron.remote.app).getPath("exe"))
 let dbFile = path.join(dbPath, 'database.sqlite')
 
+console.log(dbFile)
+
 const dbRunPromise = (db, sql_query) =>  new Promise((resolve, reject) => {
     try {
       db.run(sql_query, (err) => {
@@ -140,16 +142,15 @@ export async function CreateNewDataBase(cb) {
 
 }
 
-export function ImportDataBase(newDb) {
+export async function ImportDataBase(newDb) {
   if (!newDb) return false
 
-  fs.unlink(dbFile, (err) => {
+  await fs.unlink(dbFile, (err) => {
     if (err) console.log(err)
   })
 
   fs.copyFile(newDb, dbFile, (err) => {
     if (err) throw err
-    console.log('DB copied')
     ipcRenderer.send('ChangeCurrentDB');
   })
 }

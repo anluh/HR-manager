@@ -68,7 +68,7 @@ body
   position: absolute
   width: 96%
   left: 2%
-  top: 120px
+  top: 52px
 
   &.toast--error
     background $red-lighten
@@ -207,10 +207,21 @@ body
     color: $red
   td
     min-width 100px
-    //text-align: center
+
+    &.table-index
+      width: 30px
+      min-width: 30px
+
   td.num
     min-width: 35px
     text-align: center
+
+  .table-total
+    width: 140px
+
+  mark
+    background: none
+    color: #26a69a
 
 
 .form-btns
@@ -304,3 +315,43 @@ body
 
 .pagination>*
   margin: 0 10px
+
+
+// multiselect
+.multiselect {
+  width: 230px
+
+  input {
+    border: 0 !important
+    box-shadow: none !important
+    min-height: 0 !important
+    margin-bottom: 0 !important
+    height: 20px !important
+  }
+}
+
+.multiselect__option {
+  &:after {
+    display: none
+  }
+}
+
+// Date picker
+.mx-datepicker-main {
+  td, th {
+    text-align: center
+  }
+
+  .cell {
+    &:hover {
+      background: alpha(#26a69a, 0.7);
+      color: #fff;
+    }
+
+    &.active {
+      background: #26a69a;
+      color: #fff;
+      font-weight: bold;
+    }
+  }
+}

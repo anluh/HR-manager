@@ -20,14 +20,19 @@ let sqlite3 = require('sqlite3').verbose();
 let mainWindow
 
 // Standard scheme must be registered before the app is ready
-protocol.registerStandardSchemes(['app'], { secure: true })
+//protocol.registerStandardSchemes(['vector'], {secure: true});
+  protocol.registerSchemesAsPrivileged([{
+      scheme: 'vector', privileges: {standard: true, secure: true, supportFetchAPI: true},
+}]);
+
 function createMainWindow () {
   const window = new BrowserWindow({
     icon: __dirname + 'assets/logo.png',
     title: 'HR Manager',
     webPreferences: {
       enableRemoteModule: true,
-      nodeIntegration: true
+      nodeIntegration: true,
+      contextIsolation: false
     }
   })
 
@@ -63,6 +68,8 @@ function createMainWindow () {
 
   return window
 }
+
+app.allowRendererProcessReuse = false
 
 // quit application when all windows are closed
 app.on('window-all-closed', () => {
@@ -100,7 +107,7 @@ const pathDatabase = path.join(path.dirname((electron.app || electron.remote.app
 let db = new sqlite3.Database(pathDatabase)
 
 ipcMain.on("ChangeCurrentDB", () => {
-  // db = new sqlite3.Database(pathDatabase)
+  db = new sqlite3.Database(pathDatabase)
 
   console.log('Database switched to new one')
   mainWindow.webContents.send("ChangeCurrentDB:res");
@@ -127,9 +134,12 @@ ipcMain.on("printWorkers", (event, arg) => {
 });
 
 ipcMain.on("autocompleteWorkers", (event, arg) => {
+  const result = []
   db.serialize(function(){
-    db.each(`SELECT Id, Name FROM Workers WHERE (${parseFloat(arg.MonthStart)} > Start OR ${parseFloat(arg.MonthEnd)} > Start) AND (${parseFloat(arg.MonthStart)} < End)`, (err, rows) => {
-      mainWindow.webContents.send("autocompleteWorkers:res", rows);
+    db.each(`SELECT Id, Name FROM Workers WHERE (${parseFloat(arg.MonthStart)} > Start OR ${parseFloat(arg.MonthEnd)} > Start) AND (${parseFloat(arg.MonthStart)} < End) ORDER BY Name`, (err, rows) => {
+      result.push(rows)
+    }, () => {
+      mainWindow.webContents.send("autocompleteWorkers:res", result);
     })
   });
 });
@@ -426,11 +436,11 @@ ipcMain.on("add-salary", function (event, arg){
   arg.Hours = arg.Hours.replace(',','.')
   db.serialize(function () {
     // If hours added to worker in current month -> show err
-    db.each(`SELECT count(*) FROM History WHERE Worker_id=${arg.Worker.Id} AND Firm='${arg.Firm}' AND Month=${parseFloat(arg.MonthStart)}`, (err, rows) => {
+    db.each(`SELECT count(*) FROM History WHERE Worker_id=${arg.Worker.Id} AND Firm='${arg.Firm.Name}' AND Month BETWEEN ${parseFloat(arg.MonthStart)} AND ${parseFloat(arg.MonthEnd)}`, (err, rows) => {
       if(rows['count(*)'] > 0){
         event.returnValue = 'err_exist'
       } else {
-        db.run(`INSERT into History (Worker_id, Worker_name, Month, Hours, Firm) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseFloat(arg.MonthStart)}, '${arg.Hours}', '${arg.Firm}')`, function(err){
+        db.run(`INSERT into History (Worker_id, Worker_name, Month, Hours, Firm) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseFloat(arg.MonthStart)}, '${arg.Hours}', '${arg.Firm.Name}')`, function(err){
           if(err){
             console.log(err);
             event.returnValue = false;
@@ -445,17 +455,20 @@ ipcMain.on("add-salary", function (event, arg){
   });
 });
 
-ipcMain.on("fetchSalaryHistory", function(event, arg) {
+ipcMain.on("fetchHoursHistory", function(event, arg) {
   let query = '';
-  if (arg){
-    query = `AND Month = ${parseFloat(arg)} ORDER BY Worker_name ASC`
-  } else {
-    query = `ORDER BY Worker_name ASC LIMIT 50`
-  }
+  if (arg.month) query += `AND Month BETWEEN ${parseFloat(arg.month.MonthStart)} AND ${parseFloat(arg.month.MonthEnd)}`
+  if (arg.firm) query += ` AND Firm='${arg.firm}'`
+  if (arg.worker) query += ` AND Worker_name='${arg.worker}'`
+  query += ` ORDER BY Worker_name ASC`
+
+  const result = []
   db.serialize(function(){
-    db.each(`SELECT * FROM History WHERE Hours != '' ${query}`, (err, rows) => {
+    db.each(`SELECT * FROM History WHERE Hours!='' AND Report_id IS NULL ${query}`, (err, rows) => {
       if(err) console.log(err)
-      mainWindow.webContents.send("fetchSalaryHistory:res", rows);
+      result.push(rows)
+    }, () => {
+      mainWindow.webContents.send("fetchHoursHistory:res", result);
     })
   });
 });
@@ -509,9 +522,12 @@ ipcMain.on("delete-history", function(event, arg) {
 
 // ========== Deposit API ==========
 ipcMain.on("autocompleteWorkersDeposit", function() {
+  const result = []
   db.serialize(function(){
     db.each(`SELECT Id, Name FROM Workers ORDER BY Name`, (err, rows) => {
-      mainWindow.webContents.send("autocompleteWorkersDeposit:res", rows);
+      result.push(rows)
+    }, () => {
+      mainWindow.webContents.send("autocompleteWorkersDeposit:res", result);
     })
   });
 });
@@ -553,9 +569,13 @@ ipcMain.on("fetchCurrentDeposit", function(event, arg) {
   });
 });
 ipcMain.on("fetchDepositHistory", function() {
+  const result = []
   db.serialize(function(){
     db.each(`SELECT * FROM Deposits ORDER BY Id DESC`, (err, rows) => {
-      mainWindow.webContents.send("fetchDepositHistory:res", rows);
+      if(err) console.log(err)
+      result.push(rows)
+    }, () => {
+      mainWindow.webContents.send("fetchDepositHistory:res", result)
     })
   });
 });

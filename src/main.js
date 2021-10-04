@@ -4,6 +4,8 @@ import router from './router'
 import moment from 'moment';
 import Vuelidate from 'vuelidate'
 import Print from 'vue-print-nb'
+import multiselect from 'vue-multiselect'
+import DatePicker from 'vue2-datepicker';
 
 Vue.use(Print);
 Vue.use(Vuelidate)
@@ -20,8 +22,16 @@ Vue.config.productionTip = false
 Vue.filter('reverse', function(value) {
   return value.slice().reverse();
 });
+Vue.mixin({
+  methods: {
+    WithComaToFloat(value) {
+      return parseFloat(value.toString().replace(',','.'))
+    }
+  }
+})
 
-
+Vue.component('multiselect', multiselect)
+Vue.component('DatePicker', DatePicker)
 
 new Vue({
   router,

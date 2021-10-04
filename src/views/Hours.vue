@@ -8,39 +8,38 @@
       <transition name="slide-fade">
         <div v-if="hoursErr" class="toast toast--error">Hours on this month are already added.</div>
       </transition>
-
       <div class="input-field add-salary__month">
-        <input id="add-salary__month"
-               v-model.lazy="month"
-               :class="{ invalid: !$v.month.isDate && $v.month.required, valid: $v.month.isDate && $v.month.required }"
-               type="text">
-        <label for="add-salary__month">Month</label>
-        <span class="danger" v-show="!$v.month.isDate && $v.month.required">Enter valid month MM.YYYY</span>
+        <date-picker type="month" v-model="month" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" />
       </div>
       <form class="add-salary"
-            @submit.prevent="$v.$touch(); if(!$v.newSalary.$invalid){saveSalary(); $v.newSalary.$reset()}">
+            @submit.prevent="$v.$touch(); if(!$v.newHourRow.$invalid){saveSalary(); $v.newHourRow.$reset()}">
         <div class="add-salary__data" :class="{ disabled: !$v.month.isDate || !$v.month.required }">
           <div class="input-field col s12 m6">
-            <select v-model="newSalary.Firm">
-              <option :value="firmNone.Name" disabled>None</option>
-              <option :value="firm.Name" v-for="(firm, index) in firms" v-if="firm.Active === 1" :key="index">
-                {{ firm.Name }}
-              </option>
-            </select>
-            <label>Firm</label>
+            <multiselect
+                v-model="newHourRow.Firm"
+                label="Name"
+                placeholder="Firm"
+                :options="firms" >
+            </multiselect>
             <span class="error danger"
-                  v-show="$v.newSalary.$dirty && !$v.newSalary.Firm.notNone">This field is required</span>
+                  v-show="$v.newHourRow.$dirty && !$v.newHourRow.Firm.required">This field is required</span>
           </div>
           <div class="input-field">
-            <autocomplete :options="workers" ref="workerField" v-model="newSalary.Worker"></autocomplete>
-            <span class="error danger" v-show="$v.newSalary.$dirty && !$v.newSalary.Worker.Name.required">This field is required</span>
+            <multiselect
+                v-model="newHourRow.Worker"
+                ref="workerField"
+                label="Name"
+                placeholder="Worker"
+                :options="workers" >
+            </multiselect>
+            <span class="error danger" v-show="$v.newHourRow.$dirty && !$v.newHourRow.Worker.Name.required">This field is required</span>
           </div>
           <div class="input-field">
-            <input type="text" id="add-salary__hours" v-model="newSalary.Hours">
+            <input type="text" id="add-salary__hours" v-model="newHourRow.Hours">
             <label for="add-salary__hours">Hours</label>
-            <span class="error danger" v-show="$v.newSalary.$dirty && !$v.newSalary.Hours.required">This field is required</span>
+            <span class="error danger" v-show="$v.newHourRow.$dirty && !$v.newHourRow.Hours.required">This field is required</span>
             <span class="error danger"
-                  v-show="$v.newSalary.$dirty && $v.newSalary.Hours.required && !$v.newSalary.Hours.isNumber">Enter valid hours</span>
+                  v-show="$v.newHourRow.$dirty && $v.newHourRow.Hours.required && !$v.newHourRow.Hours.isNumber">Enter valid hours</span>
           </div>
           <button :disabled="!$v.month.isDate" class="waves-effect waves-light btn">Save</button>
         </div>
@@ -57,21 +56,24 @@
         <table class="striped table-list" cellspacing="0" cellpadding="0">
           <thead>
           <tr>
+            <th></th>
             <th>Name</th>
             <th>Month</th>
             <th>Hours</th>
             <th>Firm</th>
+            <th class="table-total">Total: <mark>{{ totalHours }} hr</mark></th>
           </tr>
           </thead>
 
           <tbody>
-          <tr v-for="(history, index) in historys" :key="index">
+          <tr v-for="(history, index) in histories" :key="index">
+            <td class="table-index">{{ index + 1 }}</td>
             <td>{{ history.Worker_name }}</td>
             <td>{{ history.Month | dateFormatter }}</td>
             <td>{{ history.Hours }}</td>
             <td>{{ history.Firm }}</td>
             <td>
-              <div v-show="hoursCheckSalary(history)">
+              <div>
                 <router-link @click.stop
                              :to="{ name: 'edithours', params: { id: history.Id, history: history, back: '/salary' } }"
                              class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
@@ -92,9 +94,7 @@
 </template>
 
 <script>
-import autocomplete from "../components/autocomplete"
 import moment from 'moment';
-
 const {ipcRenderer} = require('electron');
 import {required} from 'vuelidate/lib/validators'
 import modal from '@/components/modal.vue'
@@ -105,46 +105,24 @@ const isDate = (value) => moment(value, 'MM.YYYY', true).isValid()
 export default {
   name: "hours",
   components: {
-    autocomplete,
     modal
   },
   data() {
     return {
       firms: [],
       workers: [],
-      historys: [],
+      histories: [],
       hideHistory: false,
       month: '',
       hoursErr: 0,
-      newSalary: {
-        Worker: {
-          Id: null,
-          Name: ''
-        },
-        Firm: 'None',
+      newHourRow: {
+        Worker: {},
+        Firm: {},
         MonthStart: null,
         MonthEnd: null,
         Hours: ''
       },
-      firmNone: {
-        Name: 'None',
-        Id: null
-      },
       selected: null
-    }
-  },
-  watch: {
-    month(value) {
-      this.newSalary.MonthStart = moment(value, 'MM.YYYY').valueOf();
-      this.newSalary.MonthEnd = moment(value, 'MM.YYYY').add(1, 'months').valueOf();
-      this.fetchAutocompleteWorkers();
-      this.fetchSalaryHistory();
-      this.$v.newSalary.$reset();
-      this.newSalary.Worker.Name = '';
-      this.newSalary.Worker.Id = '';
-      this.newSalary.Firm = 'None';
-      this.newSalary.Hours = '';
-      this.materializeInit();
     }
   },
   validations: {
@@ -154,7 +132,7 @@ export default {
         return isDate(value)
       },
     },
-    newSalary: {
+    newHourRow: {
       Worker: {
         Name: {
           required
@@ -167,47 +145,63 @@ export default {
         },
       },
       Firm: {
-        notNone(value) {
-          return value !== 'None'
-        }
+        required
       }
     }
   },
+  computed: {
+    totalHours() {
+      return this.histories.reduce((a,i) => a = a + this.WithComaToFloat(i.Hours), 0).toFixed(1)
+    },
+    watchFilters() {
+      return {
+        month: this.month,
+        firm: this.newHourRow.Firm,
+        worker: this.newHourRow.Worker
+      }
+    }
+  },
+  watch: {
+    watchFilters() {
+      this.fetchHoursHistory();
+    },
+    month() {
+      this.newHourRow.MonthStart = moment(this.month, 'MM.YYYY').valueOf();
+      this.newHourRow.MonthEnd = moment(this.month, 'MM.YYYY').add(1, 'day').valueOf();
+      this.fetchAutocompleteWorkers();
+      this.$v.newHourRow.$reset();
+      this.newHourRow.Worker.Name = '';
+      this.newHourRow.Worker.Id = '';
+      this.newHourRow.Firm = '';
+      this.newHourRow.Hours = '';
+    },
+  },
   created() {
-    let firms = this.firms;
-    let workers = this.workers;
-    let historys = this.historys;
-
-    this.materializeInit();
-
     ipcRenderer.send("printFirms");
-    ipcRenderer.on("printFirms:res", function (evt, result) {
-      firms.push(result)
+    ipcRenderer.on("printFirms:res", (evt, result) => {
+      this.firms.push(result)
     });
 
-    ipcRenderer.on("autocompleteWorkers:res", function (evt, result) {
-      workers.push(result);
+    ipcRenderer.on("autocompleteWorkers:res", (evt, result) => {
+      this.workers = [...result];
     });
 
-    this.fetchSalaryHistory();
-    ipcRenderer.on("fetchSalaryHistory:res", function (evt, result) {
-      historys.push(result);
+    this.fetchHoursHistory();
+    ipcRenderer.on("fetchHoursHistory:res", (evt, result) => {
+      this.histories = [...result];
     });
   },
   methods: {
     saveSalary() {
-      let req = ipcRenderer.sendSync("add-salary", this.newSalary);
+      let req = ipcRenderer.sendSync("add-salary", this.newHourRow);
       let vm = this;
 
       if (req === true) {
-        this.fetchSalaryHistory();
         this.fetchAutocompleteWorkers();
-        this.materializeInit();
-        this.newSalary.Worker.Name = '';
-        this.newSalary.Worker.Id = '';
-        this.newSalary.Hours = '';
-        this.$refs.workerField.clear();
-        this.$refs.workerField.onFocus();
+        this.newHourRow.Worker = {}
+        this.newHourRow.Hours = '';
+        this.fetchHoursHistory();
+        this.$refs.workerField.$el.focus();
       } else if (req === 'err_exist') {
         this.hoursErr = 1;
         setTimeout(function () {
@@ -217,29 +211,25 @@ export default {
     },
     fetchAutocompleteWorkers() {
       this.workers.splice(0, this.workers.length);
-      ipcRenderer.send('autocompleteWorkers', this.newSalary);
+      ipcRenderer.send('autocompleteWorkers', this.newHourRow);
     },
-    fetchSalaryHistory() {
-      this.historys.splice(0, this.historys.length);
-      ipcRenderer.send("fetchSalaryHistory", this.newSalary.MonthStart)
+    fetchHoursHistory() {
+      const query = {}
+
+      if (this.month) query.month = {
+          MonthStart: this.newHourRow.MonthStart,
+          MonthEnd: this.newHourRow.MonthEnd,
+        }
+      if (this.newHourRow.Firm) query.firm = this.newHourRow.Firm.Name
+      if (this.newHourRow.Worker) query.worker = this.newHourRow.Worker.Name
+
+      ipcRenderer.send("fetchHoursHistory", query)
     },
     deleteHistory(history) {
       if (ipcRenderer.sendSync('delete-history', history.Id)) {
-        this.fetchSalaryHistory();
+        this.fetchHoursHistory();
       }
     },
-    materializeInit() {
-      /* eslint-disable */
-      (function ($) {
-        $(function () {
-          $('select').formSelect();
-        });
-      })(jQuery);
-      /* eslint-enable */
-    },
-    hoursCheckSalary(hour) {
-      return !hour.Report_id ? 1 : 0
-    }
   },
   filters: {
     dateFormatter(value) {
@@ -251,4 +241,5 @@ export default {
 
 <style lang="stylus">
 @import "../styles/salary.styl"
+
 </style>
