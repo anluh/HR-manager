@@ -107,18 +107,23 @@
                 </thead>
 
                 <tbody>
-                <tr v-for="(worker, index) in workers" :key="index">
-                    <td @click="workerInfo(worker)" class="num">{{ indexOffset(index) }}</td>
-                    <td @click="workerInfo(worker)">{{ worker.Name }}</td>
-                    <td @click="workerInfo(worker)">{{ worker.Age | ageFromBirth }}</td>
-                    <td @click="workerInfo(worker)">{{ worker.Sex }}</td>
-                    <td @click="workerInfo(worker)">{{ worker.Firm }}</td>
-                    <td @click="workerInfo(worker)">{{ worker.Start | dateFormatter }}</td>
-                    <td @click="workerInfo(worker)">{{ worker.End | dateFormatter }}</td>
-                    <td @click="workerInfo(worker)" class="active" v-if="worker.Active === 1">active</td>
-                    <td @click="workerInfo(worker)" class="inactive" v-if="worker.Active === 0">inactive</td>
-                    <td>
-                        <router-link @click.stop :to="{ name: 'editworker', params: { id: worker.Id, worker: worker } }" class="worker-btn"><i class="fas fa-pencil-alt"></i></router-link>
+                <tr v-for="(worker, index) in workers" :key="index" @click.stop="workerInfo(worker)">
+                    <td  class="num">{{ indexOffset(index) }}</td>
+                    <td>{{ worker.Name }}</td>
+                    <td>{{ worker.Age | ageFromBirth }}</td>
+                    <td>{{ worker.Sex }}</td>
+                    <td>{{ worker.Firm }}</td>
+                    <td>{{ worker.Start | dateFormatter }}</td>
+                    <td>{{ worker.End | dateFormatter }}</td>
+                    <td class="active" v-if="worker.Active === 1">active</td>
+                    <td class="inactive" v-if="worker.Active === 0">inactive</td>
+                    <td @click.stop>
+                        <router-link  
+                          :to="{ name: 'addworker', params: { id: worker.Id, worker: worker } }" 
+                          class="worker-btn">
+                          <i class="fas fa-pencil-alt"></i>
+                        </router-link>
+
                         <modal @submit="deleteWorker(worker)" submit-btn="Delete">
                             <i class="danger far fa-trash-alt"></i>
                             <div slot="popup-text">Do you want to delete this worker?</div>
@@ -230,7 +235,6 @@
     created() {
       let vm = this;
       let workers = this.workers;
-      let firms = this.firms;
 
       this.materializeInit();
 
@@ -252,8 +256,8 @@
       });
 
       ipcRenderer.send("printFirms");
-      ipcRenderer.on("printFirms:res", function (evt, result) {
-        firms.push(result)
+      ipcRenderer.on("printFirms:res", (evt, result) => {
+        this.firms = [...result]
       });
 
     },

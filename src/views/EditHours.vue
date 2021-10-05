@@ -1,43 +1,44 @@
 <template>
     <div class="edit-hours">
         <div class="page-title">
-            <h3>Edit history</h3>
+            <h3>Edit hours</h3>
         </div>
         <div class="view-wrapper">
 
             <div class="container">
                 <form @submit.prevent="$v.newSalary.$touch(); if(!$v.newSalary.$invalid){saveSalary(); $v.newSalary.$reset()}">
-                    <div class="input-field add-salary__month">
-                        <input id="add-salary__name"
-                               :value="newSalary.Worker.Name"
-                               class="active"
+                    <div class="input-field">
+                        <label>Name</label>
+                        <input :value="newSalary.Worker.Name"
+                               class="full-width"
                                disabled
-                               type="text">
-                        <label class="active" for="add-salary__name">Name</label>
+                               type="text" />
                     </div>
-                    <div class="input-field add-salary__month">
-                        <input id="add-salary__month"
-                               :value="newSalary.Month | dateFormatter"
+                    <div class="input-field">
+                        <label>Month</label>
+                        <input :value="newSalary.Month | dateFormatter"
                                disabled
-                               class="active"
-                               type="text">
-                        <label class="active" for="add-salary__month">Month</label>
+                               class="full-width"
+                               type="text" />
                     </div>
 
                     <div class="input-field">
-                        <input id="add-salary__hours"
-                               :class="{ invalid: $v.newSalary.Hours.$error, valid: !$v.newSalary.Hours.$invalid }"
-                               v-model="newSalary.Hours">
-
-                        <label class="active" for="add-salary__hours">Hours</label>
+                        <label>Hours</label>
+                        <input :class="{ invalid: $v.newSalary.Hours.$error }"
+                               v-model="newSalary.Hours"
+                               type="text">
                         <span class="error danger" v-show="$v.newSalary.$dirty && !$v.newSalary.Hours.required">This field is required</span>
                         <span class="error danger" v-show="$v.newSalary.$dirty && $v.newSalary.Hours.required && !$v.newSalary.Hours.decimal">Enter valid hours</span>
                     </div>
                     <div class="input-field col s12 m6">
-                        <select v-model="newSalary.Firm">
-                            <option :value="firm.Name" v-for="(firm, index) in firms" v-if="firm.Active === 1" :key="index">{{ firm.Name }}</option>
-                        </select>
                         <label>Firm</label>
+                        <multiselect
+                            class="full-width"
+                            v-model="newSalary.Firm"
+                            label="Name"
+                            placeholder=""
+                            :options="firms" >
+                        </multiselect>
                     </div>
                     <div class="form-btns">
                         <button class="waves-effect waves-light btn">Save</button>
@@ -90,9 +91,6 @@
       }
     },
     created() {
-      let firms = this.firms;
-      let workers = this.workers;
-
       this.newSalary.Id = this.$route.params.history.Id;
       this.newSalary.Worker.Name = this.$route.params.history.Worker_name;
       this.newSalary.Worker.Id = this.$route.params.history.Worker_id;
@@ -101,15 +99,14 @@
       this.newSalary.Firm = this.$route.params.history.Firm;
       this.newSalary.Report_id = this.$route.params.history.Report_id;
 
-      this.materializeInit();
-
       ipcRenderer.send("printFirms");
-      ipcRenderer.on("printFirms:res", function (evt, result) {
-        firms.push(result)
+      ipcRenderer.on("printFirms:res", (evt, result) => {
+        this.firms = [...result]
+        this.newSalary.Firm = this.firms.find(i => i.Name === this.$route.params.history.Firm)
       });
 
-      ipcRenderer.on("autocompleteWorkers:res", function (evt, result) {
-        workers.push(result);
+      ipcRenderer.on("autocompleteWorkers:res", (evt, result) => {
+        this.workers = [...result]
       });
 
     },
@@ -118,6 +115,8 @@
         router.push({name: 'workerinfo', params: { id: this.$route.params.history.Worker_id }})
       },
       saveSalary(){
+        let query = this.newSalary
+        query.Firm = this.newSalary.Firm.Name
         if(ipcRenderer.sendSync("update-hours", this.newSalary)){
           this.redirect();
         }
@@ -141,6 +140,6 @@
   }
 </script>
 
-<style scoped>
+<style>
 
 </style>

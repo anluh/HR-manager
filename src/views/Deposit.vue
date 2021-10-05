@@ -8,9 +8,9 @@
 
       <form class="add-deposit"
             @submit.prevent="$v.newDeposit.$touch(); if(!$v.newDeposit.$invalid){saveDeposit(); $v.newDeposit.$reset();}">
-<!--          <autocomplete :options="workers" ref="workerField" v-model="newDeposit.Worker"></autocomplete>-->
         <div class="input-field">
-        <multiselect
+          <label>Worker</label>
+          <multiselect
             v-model="newDeposit.Worker"
             label="Name"
             placeholder="Worker"
@@ -19,18 +19,18 @@
           <span class="error danger" v-show="$v.newDeposit.$dirty && !$v.newDeposit.Worker.Name.required">This field is required</span>
         </div>
         <div class="input-field">
+          <label>Money</label>
           <input id="add-deposit__money" v-model="newDeposit.Money" type="text">
-          <label for="add-deposit__money">Money</label>
           <span class="error danger" v-show="$v.newDeposit.$dirty && !$v.newDeposit.Money.required">This field is required</span>
           <span class="error danger"
                 v-show="$v.newDeposit.$dirty && $v.newDeposit.Money.required && !$v.newDeposit.Money.decimal">Enter valid hours</span>
         </div>
         <div class="input-field">
+          <label>Comment</label>
           <input id="add-deposit__comment" v-model="newDeposit.Comment" type="text">
-          <label for="add-deposit__comment">Comment</label>
         </div>
 
-        <button class="waves-effect waves-light btn">Save</button>
+        <button class="waves-effect waves-light btn save">Save</button>
       </form>
 
       <div class="hide-history">
@@ -184,7 +184,11 @@ export default {
   align-items: center
   margin-bottom: 80px
 
-  & > *
-    margin: 1rem 10px
+  .input-field
+    flex 1
+    margin-right 30px
+
+    .multiselect
+      width 100%
 
 </style>

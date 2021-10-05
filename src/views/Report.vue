@@ -202,7 +202,6 @@
       }
     },
     created() {
-      let firms = this.firms;
       let workers = this.workers;
       let vm = this;
 
@@ -221,9 +220,9 @@
       });
 
       ipcRenderer.send("printFirms");
-      ipcRenderer.on("printFirms:res", function (evt, result) {
+      ipcRenderer.on("printFirms:res", (evt, result) => {
         result["active"] = 0;
-        firms.push(result)
+        this.firms = [...result]
       });
 
       ipcRenderer.on("reportFetchWorkers:res", function (evt, result) {

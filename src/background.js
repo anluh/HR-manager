@@ -291,7 +291,7 @@ ipcMain.on("workerFilterActive", (event, arg) => {
 
 ipcMain.on("printFirms", function() {
   db.serialize(function(){
-    db.each("SELECT * FROM Firms WHERE Active=1 ORDER BY Name ASC", (err, rows) => {
+    db.all("SELECT * FROM Firms WHERE Active=1 ORDER BY Name ASC", (err, rows) => {
       mainWindow.webContents.send("printFirms:res", rows);
     })
   });
@@ -304,16 +304,33 @@ ipcMain.on("add-worker", function (event, arg){
   }
 
   db.serialize(function () {
-    db.run(`INSERT into Workers (Name, Age, Sex, Firm, Firm_id, Start, End, Active) values('${arg.Name}', '${arg.Age}', '${arg.Sex}', '${arg.Firm.Name}', ${arg.Firm.Id}, '${arg.Start}', '${arg.End}', ${parseFloat(arg.Active)})`, function(err){
-      if(err){
-        // event.returnValue = err
-        console.log(err)
-      } else {
+    db.get(`SELECT Name FROM Workers WHERE Name='${arg.Name}'`,(err, row) => {
+      if (row) event.returnValue = false;
+
+      db.run(`INSERT into Workers (Name, Age, Sex, Firm, Firm_id, Start, End, Active) values('${arg.Name}', '${arg.Age}', '${arg.Sex}', '${arg.Firm.Name}', ${arg.Firm.Id}, '${arg.Start}', '${arg.End}', ${parseFloat(arg.Active)})`, function(err){
+        if(err) console.log(err)
         event.returnValue = true;
-      }
-    })
+      })
+    });
+
+    
   });
 })
+
+ipcMain.on("edit-worker", (event, arg) => {
+  if(!arg.End){
+    arg.End = null
+  }
+  db.run(`UPDATE Workers SET Name='${arg.Name}', Age='${arg.Age}', Sex='${arg.Sex}', Firm='${arg.Firm.Name}', Firm_id=${arg.Firm.Id}, Start='${arg.Start}', End='${arg.End}', Active=${parseFloat(arg.Active)} WHERE Id=${parseFloat(arg.Id)}`, (err) => {
+    if (err) {
+      console.log(err)
+      event.returnValue = false
+    } else {
+      event.returnValue = true
+    }
+  });
+});
+
 
 // Delete worker
 ipcMain.on("delete-worker", function (event, arg) {
@@ -415,20 +432,6 @@ ipcMain.on("edit-firm", function(event, arg) {
     errors.length > 0 ? event.returnValue = false : event.returnValue = true;
   });
 
-});
-
-ipcMain.on("edit-worker", (event, arg) => {
-  if(!arg.End){
-    arg.End = null
-  }
-  db.run(`UPDATE Workers SET Name='${arg.Name}', Age='${arg.Age}', Sex='${arg.Sex}', Firm='${arg.Firm.Name}', Firm_id=${arg.Firm.Id}, Start='${arg.Start}', End='${arg.End}', Active=${parseFloat(arg.Active)} WHERE Id=${parseFloat(arg.Id)}`, (err) => {
-    if (err) {
-      console.log(err)
-      event.returnValue = false
-    } else {
-      event.returnValue = true
-    }
-  });
 });
 
 // ============= Hours API ==============

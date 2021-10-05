@@ -63,12 +63,11 @@
       }
     },
     created(){
-      // let vm = this;
-      let firms = this.firms;
 
       ipcRenderer.send("printFirms");
-      ipcRenderer.on("printFirms:res", function (evt, result) {
-        firms.push(result)
+      ipcRenderer.on("printFirms:res", (evt, result) => {
+        console.log(result)
+        this.firms = [...result]
       });
     },
     methods:{

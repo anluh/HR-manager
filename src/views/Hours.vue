@@ -15,33 +15,35 @@
             @submit.prevent="$v.$touch(); if(!$v.newHourRow.$invalid){saveSalary(); $v.newHourRow.$reset()}">
         <div class="add-salary__data" :class="{ disabled: !$v.month.isDate || !$v.month.required }">
           <div class="input-field col s12 m6">
+            <label>Firm</label>
             <multiselect
                 v-model="newHourRow.Firm"
                 label="Name"
-                placeholder="Firm"
+                placeholder=""
                 :options="firms" >
             </multiselect>
             <span class="error danger"
                   v-show="$v.newHourRow.$dirty && !$v.newHourRow.Firm.required">This field is required</span>
           </div>
           <div class="input-field">
+            <label>Worker</label>
             <multiselect
                 v-model="newHourRow.Worker"
                 ref="workerField"
                 label="Name"
-                placeholder="Worker"
+                placeholder=""
                 :options="workers" >
             </multiselect>
             <span class="error danger" v-show="$v.newHourRow.$dirty && !$v.newHourRow.Worker.Name.required">This field is required</span>
           </div>
           <div class="input-field">
-            <input type="text" id="add-salary__hours" v-model="newHourRow.Hours">
-            <label for="add-salary__hours">Hours</label>
+            <label>Hours</label>
+            <input type="text" v-model="newHourRow.Hours">
             <span class="error danger" v-show="$v.newHourRow.$dirty && !$v.newHourRow.Hours.required">This field is required</span>
             <span class="error danger"
                   v-show="$v.newHourRow.$dirty && $v.newHourRow.Hours.required && !$v.newHourRow.Hours.isNumber">Enter valid hours</span>
           </div>
-          <button :disabled="!$v.month.isDate" class="waves-effect waves-light btn">Save</button>
+          <button :disabled="!$v.month.isDate" class="waves-effect waves-light btn save">Save</button>
         </div>
       </form>
 
@@ -179,7 +181,7 @@ export default {
   created() {
     ipcRenderer.send("printFirms");
     ipcRenderer.on("printFirms:res", (evt, result) => {
-      this.firms.push(result)
+      this.firms = [...result]
     });
 
     ipcRenderer.on("autocompleteWorkers:res", (evt, result) => {

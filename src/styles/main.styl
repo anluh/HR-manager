@@ -12,6 +12,9 @@ body
   padding: 20px 50px 80px
   background-color #fff
 
+.relative
+  position relative
+
 .modal-wrapper
   display: inline-block
 
@@ -168,7 +171,7 @@ body
   display: flex
   align-items: center
   justify-content: center
-  margin-bottom: 10px
+  margin-bottom: 25px
 
   h3
     font-size: 30px
@@ -181,11 +184,15 @@ body
 .add-worker-btn
   margin-bottom: 20px
 .worker-btn
-  width: 35px
   padding: 0
   background transparent
   border: none
   cursor: pointer
+  padding 10px
+
+  &:hover i
+    color: $main-light
+
   &:focus
     background: none
   i
@@ -195,8 +202,6 @@ body
 
     &.danger:hover
       color: $red
-  i:hover
-    color: $main-light
 .table-list
   border: none
   border-collapse: collapse;
@@ -355,3 +360,14 @@ body
     }
   }
 }
+
+.btn.save
+  margin-top 22px
+  flex-basis: 100px;
+
+.toast
+  position: absolute;
+  width: 96%;
+  left: 2%;
+  top: 52px;
+  background: #ef5350;
