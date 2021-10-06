@@ -99,8 +99,8 @@
       this.newSalary.Firm = this.$route.params.history.Firm;
       this.newSalary.Report_id = this.$route.params.history.Report_id;
 
-      ipcRenderer.send("printFirms");
-      ipcRenderer.on("printFirms:res", (evt, result) => {
+      ipcRenderer.send("printActiveFirms");
+      ipcRenderer.on("printActiveFirms:res", (evt, result) => {
         this.firms = [...result]
         this.newSalary.Firm = this.firms.find(i => i.Name === this.$route.params.history.Firm)
       });

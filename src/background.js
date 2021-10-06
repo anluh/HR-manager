@@ -186,8 +186,16 @@ ipcMain.on("printWorkersFilter", (event, arg) => {
 
 ipcMain.on("printFirms", function () {
   db.serialize(function () {
-    db.all("SELECT * FROM Firms WHERE Active=1 ORDER BY Name ASC", (err, rows) => {
+    db.all("SELECT * FROM Firms ORDER BY Name ASC", (err, rows) => {
       mainWindow.webContents.send("printFirms:res", rows);
+    })
+  });
+});
+
+ipcMain.on("printActiveFirms", function () {
+  db.serialize(function () {
+    db.all("SELECT * FROM Firms WHERE Active=1 ORDER BY Name ASC", (err, rows) => {
+      mainWindow.webContents.send("printActiveFirms:res", rows);
     })
   });
 });
@@ -329,14 +337,13 @@ ipcMain.on("edit-firm", function (event, arg) {
   let check = null;
 
   // Check if there are workers on the firm before change firm status to inactive
-  db.each(`SELECT count(*)
+  db.get(`SELECT count(*)
            FROM Workers
            WHERE Firm_id = ${arg.Id}`, (err, rows) => {
-    check = rows['count(*)'];
+    check = rows['count(*)']
 
     if (check > 0 && parseFloat(arg.Active) === 0) {
       errors.push('workers_err');
-
     } else {
       db.run(`UPDATE Firms
               SET Name='${arg.Name}',

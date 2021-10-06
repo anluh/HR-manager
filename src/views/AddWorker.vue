@@ -23,8 +23,8 @@
               
               <div class="input-field col s6 m6">
                   <label>Birthday</label>
-                  <date-picker class="full-width" type="date" v-model="newWorker.Age" placeholder="DD.MM.YYYY" format="DD.MM.YYYY" value-type="DD.MM.YYYY" :append-to-body="false" />
-                  <span v-if="$v.newWorker.Age.$dirty && !$v.newWorker.Age.isDate" class="danger">Enter a valid birthday DD.MM.YYYY</span>
+                  <date-picker class="full-width" type="date" v-model="newWorker.Age" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" :append-to-body="false" />
+                  <span v-if="$v.newWorker.Age.$dirty && !$v.newWorker.Age.isDate" class="danger">Enter a valid birthday MM.YYYY</span>
               </div>
 
               <div class="input-field col s12 m6">
@@ -52,13 +52,13 @@
                   <label>Start</label>
                   <date-picker class="full-width" type="month" v-model="newWorker.startDate" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" :append-to-body="false" />
                   <span v-if="$v.newWorker.startDate.$dirty && !$v.newWorker.startDate.required" class="danger">This field is required</span>
-                  <span v-if="$v.newWorker.startDate.$dirty && !$v.newWorker.startDate.isDate && $v.newWorker.startDate.required" class="danger">Enter a valid date DD.MM.YYYY</span>
+                  <span v-if="$v.newWorker.startDate.$dirty && !$v.newWorker.startDate.isDate && $v.newWorker.startDate.required" class="danger">Enter a valid date MM.YYYY</span>
               </div>
 
               <div class="input-field col s6 m6">
                   <label>End</label>
                   <date-picker class="full-width" type="month" v-model="newWorker.endDate" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" :append-to-body="false" />
-                  <span v-if="$v.newWorker.endDate.$dirty && !$v.newWorker.endDate.isDate" class="danger">Enter a valid date DD.MM.YYYY</span>
+                  <span v-if="$v.newWorker.endDate.$dirty && !$v.newWorker.endDate.isDate" class="danger">Enter a valid date MM.YYYY</span>
                   <span v-if="$v.newWorker.endDate.$dirty && $v.newWorker.endDate.isDate && $v.newWorker.startDate.required && !$v.newWorker.endDate.minDate" class="danger">Enter a valid end date</span>
               </div>
               
@@ -165,13 +165,13 @@
         }
       }
     },
-    created() {
+    mounted() {
       if (this.$route.params.worker) {
         this.previousData()
       }
 
-      ipcRenderer.send("printFirms");
-      ipcRenderer.on("printFirms:res", (evt, result) => {
+      ipcRenderer.send("printActiveFirms");
+      ipcRenderer.on("printActiveFirms:res", (evt, result) => {
         this.firms = [...result]
       });
 
@@ -205,9 +205,9 @@
         this.newWorker.Firm.Name = this.$route.params.worker.Firm;
         this.newWorker.Firm.Id = this.$route.params.worker.Firm_id;
         this.newWorker.Active = this.$route.params.worker.Active ? { label: "Active", value: 1} : { label: "Inactive", value: 0};
-        this.newWorker.startDate =  window.moment(parseFloat(this.$route.params.worker.Start)).format('DD.MM.YYYY');
+        this.newWorker.startDate =  window.moment(parseFloat(this.$route.params.worker.Start)).format('MM.YYYY');
         if(this.$route.params.worker.End !== 'null') {
-          this.newWorker.endDate = window.moment(parseFloat(this.$route.params.worker.End)).format('DD.MM.YYYY');
+          this.newWorker.endDate = window.moment(parseFloat(this.$route.params.worker.End)).format('MM.YYYY');
         } else {
           this.newWorker.endDate = ''
         }

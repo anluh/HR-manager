@@ -56,7 +56,7 @@ export default new Router({
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('./views/EditFirm.vue')
+      component: () => import('./views/AddFirm.vue')
     },
     {
       path: '/worker/info/:id',

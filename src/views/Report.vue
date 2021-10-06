@@ -239,8 +239,8 @@ export default {
 
     });
 
-    ipcRenderer.send("printFirms");
-    ipcRenderer.on("printFirms:res", (evt, result) => {
+    ipcRenderer.send("printActiveFirms");
+    ipcRenderer.on("printActiveFirms:res", (evt, result) => {
       this.firms = result.map(i => {
         i.active = 0
         return i
