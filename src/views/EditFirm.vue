@@ -25,11 +25,14 @@
                         <span v-if="$v.newFirm.Address.$dirty && !$v.newFirm.Address.required" class="danger">This field is required</span>
                     </div>
                     <div class="input-field input-field--select col s12 m6">
-                        <select id="firm_status" v-model="newFirm.Active">
-                            <option value="1">active</option>
-                            <option value="0">inactive</option>
-                        </select>
-                        <label for="firm_status">Status</label>
+                      <label>Active</label>
+                      <multiselect
+                          v-model="newFirm.Active"
+                          label="label"
+                          placeholder=""
+                          :searchable="false"
+                          :options="activeOptions">
+                      </multiselect>
                     </div>
 
                     <div class="form-btns">
@@ -54,9 +57,13 @@
         newFirm: {
           Name: '',
           Address: '',
-          Active: 1,
+          Active: {label: 'Active', value: '1'},
           Id: null
         },
+        activeOptions: [
+          {label: 'Active', value: '1'},
+          {label: 'Inactive', value: '0'},
+        ],
         workers_err: 0
       }
     },
@@ -96,7 +103,6 @@
         this.newFirm.Address = this.$route.params.firm.Address;
         this.newFirm.Active = this.$route.params.firm.Active;
         this.newFirm.Id = this.$route.params.firm.Id;
-
       },
       materializeInit(){
         /* eslint-disable */

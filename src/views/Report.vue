@@ -27,7 +27,7 @@
                 :options="notActiveWorkers">
             </multiselect>
           </div>
-          <button class="waves-effect waves-light btn" @click="addToReportAutocomp">Add</button>
+          <button class="waves-effect waves-light btn save" @click="addToReportAutocomp">Add</button>
         </div>
 
       </div>

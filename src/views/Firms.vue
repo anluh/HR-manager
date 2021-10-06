@@ -62,11 +62,9 @@
         deleteErr: false
       }
     },
-    created(){
-
+    mounted(){
       ipcRenderer.send("printFirms");
       ipcRenderer.on("printFirms:res", (evt, result) => {
-        console.log(result)
         this.firms = [...result]
       });
     },
@@ -81,6 +79,9 @@
             vm.deleteErr = false;
           }, 8000);
         }
+      },
+      beforeDestroy() {
+        ipcRenderer.removeAllListeners();
       },
     }
   }

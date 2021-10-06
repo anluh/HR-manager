@@ -5,27 +5,30 @@
         </div>
 
         <div class="container">
-            <form v-on:submit.prevent="$v.newFirm.$touch(); if(!$v.newFirm.$invalid){addFirm()}">
+            <form v-on:submit.prevent="$v.newFirm.$touch(); if(!$v.newFirm.$invalid){submitFirm()}">
                 <div class="input-field col s6 m6">
-                    <input id="firm_Name" type="text" class="validate"
+                    <label>Name</label>
+                    <input type="text" class="validate"
                            v-model="newFirm.Name"
                            :class="{ invalid: $v.newFirm.Name.$error, valid: !$v.newFirm.Name.$invalid }">
-                    <label for="firm_Name">Name</label>
                     <span v-if="$v.newFirm.Name.$dirty && !$v.newFirm.Name.required" class="danger">This field is required</span>
                 </div>
                 <div class="input-field col s6 m6">
-                    <input id="firm_Address" type="text" class="validate"
+                    <label>Address</label>
+                    <input type="text" class="validate"
                            v-model="newFirm.Address"
                            :class="{ invalid: $v.newFirm.Address.$error, valid: !$v.newFirm.Address.$invalid }">
-                    <label for="firm_Address">Address</label>
                     <span v-if="$v.newFirm.Address.$dirty && !$v.newFirm.Address.required" class="danger">This field is required</span>
                 </div>
                 <div class="input-field input-field--select col s12 m6">
-                    <select id="firm_status" v-model="newFirm.Active">
-                        <option value="1">Active</option>
-                        <option value="0">inActive</option>
-                    </select>
-                    <label for="firm_status">Status</label>
+                  <label>Active</label>
+                  <multiselect
+                      v-model="newFirm.Active"
+                      label="label"
+                      placeholder=""
+                      :searchable="false"
+                      :options="activeOptions">
+                  </multiselect>
                 </div>
 
                 <div class="form-btns">
@@ -49,8 +52,13 @@
         newFirm: {
           Name: '',
           Address: '',
-          Active: 1,
+          Active: {label: 'Active', value: '1'},
         },
+        activeOptions: [
+          {label: 'Active', value: '1'},
+          {label: 'Inactive', value: '0'},
+        ],
+        workers_err: 0
       }
     },
     validations: {
@@ -64,26 +72,35 @@
       }
     },
     created() {
-      this.materializeInit();
+      if (this.$route.params.firm) this.previousData()
     },
     methods: {
       redirect() {
         router.push('/firms');
       },
+      previousData(){
+        this.newFirm.Name = this.$route.params.firm.Name;
+        this.newFirm.Address = this.$route.params.firm.Address;
+        this.newFirm.Active = this.$route.params.firm.Active;
+        this.newFirm.Id = this.$route.params.firm.Id;
+      },
+      submitFirm() {
+        if (this.$route.params.firm) this.editFirm()
+        else this.addFirm()
+      },
       addFirm() {
         ipcRenderer.sendSync('add-firm', this.newFirm) === true ? this.redirect() : console.log("DB Error");
       },
-      materializeInit(){
-        /* eslint-disable */
-        // Initialize materialize elements
-        (function($){
-          $(function(){
-
-            $('select').formSelect();
-
-          }); // end of document ready
-        })(jQuery); // end of jQuery Name space
-        /* eslint-enable */
+      editFirm() {
+        const req = ipcRenderer.sendSync('edit-firm', this.newFirm);
+        if(req === true) {
+          this.redirect()
+        } else {
+          this.workers_err = 1;
+          setTimeout(() => {
+            this.workers_err = false;
+          }, 8000);
+        }
       }
     }
   }

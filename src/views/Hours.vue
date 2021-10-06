@@ -181,7 +181,7 @@ export default {
       else this.histories = []
     },
   },
-  created() {
+  mounted() {
     ipcRenderer.send("printFirms");
     ipcRenderer.on("printFirms:res", (evt, result) => {
       this.firms = [...result]
@@ -239,7 +239,10 @@ export default {
     dateFormatter(value) {
       return window.moment(parseFloat(value)).format('DD.MM.YYYY')
     }
-  }
+  },
+  beforeDestroy() {
+    ipcRenderer.removeAllListeners();
+  },
 }
 </script>
 

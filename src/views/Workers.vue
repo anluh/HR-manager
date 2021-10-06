@@ -186,7 +186,7 @@ export default {
       this.fetchWorkersFilter()
     }
   },
-  created() {
+  mounted() {
     this.fetchWorkersFilter()
 
     ipcRenderer.on("printWorkersFilter:res", (evt, result) => {
@@ -262,6 +262,9 @@ export default {
         return ''
       }
     }
+  },
+  beforeDestroy() {
+    ipcRenderer.removeAllListeners();
   },
 }
 </script>
