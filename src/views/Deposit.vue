@@ -12,6 +12,7 @@
           <label>Worker</label>
           <multiselect
             v-model="newDeposit.Worker"
+            ref="workerField"
             label="Name"
             placeholder="Worker"
             :options="workers" >
@@ -137,8 +138,7 @@ export default {
         this.fetchDepositHistory();
         this.newDeposit.Money = '';
         this.newDeposit.Comment = '';
-        this.$refs.workerField.clear();
-        this.$refs.workerField.onFocus();
+        this.$refs.workerField.$el.focus();
 
         /* eslint-disable */
         (jQuery)('.add-deposit__money ~ label').removeClass('active');
@@ -186,7 +186,7 @@ export default {
 
   .input-field
     flex 1
-    margin-right 30px
+    margin-right 15px
 
     .multiselect
       width 100%

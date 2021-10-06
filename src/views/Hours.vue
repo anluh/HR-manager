@@ -9,6 +9,7 @@
         <div v-if="hoursErr" class="toast toast--error">Hours on this month are already added.</div>
       </transition>
       <div class="input-field add-salary__month">
+        <label>Month</label>
         <date-picker type="month" v-model="month" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" :append-to-body="false"/>
       </div>
       <form class="add-salary"
@@ -157,7 +158,6 @@ export default {
     },
     watchFilters() {
       return {
-        month: this.month,
         firm: this.newHourRow.Firm,
         worker: this.newHourRow.Worker
       }
@@ -165,17 +165,20 @@ export default {
   },
   watch: {
     watchFilters() {
-      this.fetchHoursHistory();
+      if (this.month) this.fetchHoursHistory()
+      else this.histories = []
     },
     month() {
       this.newHourRow.MonthStart = moment(this.month, 'MM.YYYY').valueOf();
       this.newHourRow.MonthEnd = moment(this.month, 'MM.YYYY').add(1, 'day').valueOf();
       this.fetchAutocompleteWorkers();
       this.$v.newHourRow.$reset();
-      this.newHourRow.Worker.Name = '';
-      this.newHourRow.Worker.Id = '';
+      this.newHourRow.Worker = '';
       this.newHourRow.Firm = '';
       this.newHourRow.Hours = '';
+
+      if (this.month) this.fetchHoursHistory()
+      else this.histories = []
     },
   },
   created() {
@@ -188,7 +191,6 @@ export default {
       this.workers = [...result];
     });
 
-    this.fetchHoursHistory();
     ipcRenderer.on("fetchHoursHistory:res", (evt, result) => {
       this.histories = [...result];
     });
@@ -235,7 +237,7 @@ export default {
   },
   filters: {
     dateFormatter(value) {
-      return window.moment(parseFloat(value)).format('MM.YYYY')
+      return window.moment(parseFloat(value)).format('DD.MM.YYYY')
     }
   }
 }

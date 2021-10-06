@@ -50,14 +50,14 @@
 
               <div class="input-field col s6 m6">
                   <label>Start</label>
-                  <date-picker class="full-width" type="date" v-model="newWorker.startDate" placeholder="DD.MM.YYYY" format="DD.MM.YYYY" value-type="DD.MM.YYYY" :append-to-body="false" />
+                  <date-picker class="full-width" type="month" v-model="newWorker.startDate" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" :append-to-body="false" />
                   <span v-if="$v.newWorker.startDate.$dirty && !$v.newWorker.startDate.required" class="danger">This field is required</span>
                   <span v-if="$v.newWorker.startDate.$dirty && !$v.newWorker.startDate.isDate && $v.newWorker.startDate.required" class="danger">Enter a valid date DD.MM.YYYY</span>
               </div>
 
               <div class="input-field col s6 m6">
                   <label>End</label>
-                  <date-picker class="full-width" type="date" v-model="newWorker.endDate" placeholder="DD.MM.YYYY" format="DD.MM.YYYY" value-type="DD.MM.YYYY" :append-to-body="false" />
+                  <date-picker class="full-width" type="month" v-model="newWorker.endDate" placeholder="MM.YYYY" format="MM.YYYY" value-type="MM.YYYY" :append-to-body="false" />
                   <span v-if="$v.newWorker.endDate.$dirty && !$v.newWorker.endDate.isDate" class="danger">Enter a valid date DD.MM.YYYY</span>
                   <span v-if="$v.newWorker.endDate.$dirty && $v.newWorker.endDate.isDate && $v.newWorker.startDate.required && !$v.newWorker.endDate.minDate" class="danger">Enter a valid end date</span>
               </div>
@@ -91,7 +91,7 @@
   const {ipcRenderer} = require('electron');
   import { required } from 'vuelidate/lib/validators'
 
-  const isDate = (value) => moment(value, 'DD.MM.YYYY', true).isValid()
+  const isDate = (value) => moment(value, 'MM.YYYY', true).isValid()
 
   export default {
     name: "addworker",
@@ -155,11 +155,11 @@
     },
     watch: {
       'newWorker.startDate'(value){
-        this.newWorker.Start = window.moment(value, "DD.MM.YYYY").valueOf();
+        this.newWorker.Start = window.moment(value, "MM.YYYY").valueOf();
       },
       'newWorker.endDate'(value){
         if(value) {
-          this.newWorker.End = window.moment(value, "DD.MM.YYYY").valueOf();
+          this.newWorker.End = window.moment(value, "MM.YYYY").valueOf();
         } else {
           this.newWorker.End = null;
         }

@@ -1,18 +1,20 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import {app, protocol, BrowserWindow, ipcMain} from 'electron'
 import * as path from 'path'
-import { format as formatUrl } from 'url'
+import {format as formatUrl} from 'url'
 import {
   createProtocol,
 } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension from 'electron-devtools-installer'
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 if (isDevelopment) {
   // Don't load any native (external) modules until the following line is run:
   require('module').globalPaths.push(process.env.NODE_MODULES_PATH)
 }
 import electron from "electron";
+
 let sqlite3 = require('sqlite3').verbose();
 
 
@@ -21,11 +23,11 @@ let mainWindow
 
 // Standard scheme must be registered before the app is ready
 //protocol.registerStandardSchemes(['vector'], {secure: true});
-  protocol.registerSchemesAsPrivileged([{
-      scheme: 'vector', privileges: {standard: true, secure: true, supportFetchAPI: true},
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'vector', privileges: {standard: true, secure: true, supportFetchAPI: true},
 }]);
 
-function createMainWindow () {
+function createMainWindow() {
   const window = new BrowserWindow({
     icon: __dirname + 'assets/logo.png',
     title: 'HR Manager',
@@ -118,12 +120,16 @@ ipcMain.on("ChangeCurrentDB", () => {
 ipcMain.on("printWorkers", (event, arg) => {
   let pageOffset = arg.currentPage * arg.perPage - arg.perPage;
 
-  db.serialize(function(){
+  db.serialize(function () {
     let totalItems = 0;
-    db.each(`SELECT count(*) FROM Workers`, (err, rows) => {
+    db.each(`SELECT count(*)
+             FROM Workers`, (err, rows) => {
       totalItems = rows['count(*)'];
     });
-    db.each(`SELECT * FROM Workers ORDER BY Name ASC LIMIT ${arg.perPage} OFFSET ${pageOffset}`, (err, rows) => {
+    db.each(`SELECT *
+             FROM Workers
+             ORDER BY Name ASC LIMIT ${arg.perPage}
+             OFFSET ${pageOffset}`, (err, rows) => {
       let response = {};
       response.totalItems = totalItems;
       response.rows = rows;
@@ -135,8 +141,12 @@ ipcMain.on("printWorkers", (event, arg) => {
 
 ipcMain.on("autocompleteWorkers", (event, arg) => {
   const result = []
-  db.serialize(function(){
-    db.each(`SELECT Id, Name FROM Workers WHERE (${parseFloat(arg.MonthStart)} > Start OR ${parseFloat(arg.MonthEnd)} > Start) AND (${parseFloat(arg.MonthStart)} < End) ORDER BY Name`, (err, rows) => {
+  db.serialize(function () {
+    db.each(`SELECT Id, Name
+             FROM Workers
+             WHERE (${parseFloat(arg.MonthStart)} > Start OR ${parseFloat(arg.MonthEnd)} > Start)
+               AND (${parseFloat(arg.MonthStart)} < End)
+             ORDER BY Name`, (err, rows) => {
       result.push(rows)
     }, () => {
       mainWindow.webContents.send("autocompleteWorkers:res", result);
@@ -145,152 +155,37 @@ ipcMain.on("autocompleteWorkers", (event, arg) => {
 });
 
 ipcMain.on("printWorkersFilter", (event, arg) => {
-  console.log(arg)
-  let pageOffset = arg.pagination.currentPage * arg.pagination.perPage - arg.pagination.perPage;
-  let filter = {};
-  let dateFilter = '';
+  const pageOffset = arg.pagination.currentPage * arg.pagination.perPage - arg.pagination.perPage;
+  let totalItems = 0
 
-  if(arg.filterBy.Field === 'Name'){
-    filter.key =  'Name';
-    filter.value = arg.filterBy.Name;
+  let query = arg.name ? `Name LIKE '${arg.name}%'` : `Name IS NOT NULL`
+  if (arg.firmId) query += ` AND Firm_id='${arg.firmId}'`
+  if (arg.date) query += ` AND Start>${parseInt(arg.date)}`
+  if (arg.active) query += ` AND Active='${arg.active}'`
 
-  } else if (arg.filterBy.Field === 'Firm'){
-    filter.key =  'Firm';
-    filter.value = arg.filterBy.Firm;
-  } else if (arg.filterBy.Field === 'Date') {
-    if (arg.filterBy.Date.Start && !arg.filterBy.Date.End) {
-      dateFilter = `Start >= ${arg.filterBy.Date.Start}`
-    } else if (!arg.filterBy.Date.Start && arg.filterBy.Date.End) {
-      dateFilter = `End <= ${arg.filterBy.Date.End}`
-    } else if (arg.filterBy.Date.Start || arg.filterBy.Date.End) {
-      dateFilter = `Start >= ${arg.filterBy.Date.Start} AND End <= ${arg.filterBy.Date.End}`
-    }
-  }
-
-  //Filter by NAME
-
-  if(arg.filterBy.Field === 'Name') {
-    // Check if Filter by Active exist
-    if(arg.filterBy.Active){
-      db.serialize(function () {
-        let totalItems = 0;
-        db.each(`SELECT count(*) FROM Workers WHERE Name LIKE '%${arg.filterBy.Name}%' AND Active = ${parseFloat(arg.filterBy.Active)}`, (err, rows) => {
-          totalItems = rows['count(*)'];
-        });
-        db.each(`SELECT * FROM Workers WHERE Name LIKE '%${arg.filterBy.Name}%' AND Active = ${parseFloat(arg.filterBy.Active)} ORDER BY Id DESC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
-          let response = {};
-          response.totalItems = totalItems;
-          response.rows = rows;
-          mainWindow.webContents.send("printWorkersFilter:res", response);
-        })
-      });
-    } else {
-
-      db.serialize(function () {
-        let totalItems = 0;
-        db.each(`SELECT count(*) FROM Workers WHERE Name LIKE '%${arg.filterBy.Name}%'`, (err, rows) => {
-          totalItems = rows['count(*)'];
-        });
-        db.each(`SELECT * FROM Workers WHERE Name LIKE '%${arg.filterBy.Name}%' ORDER BY Id DESC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
-          let response = {};
-          response.totalItems = totalItems;
-          response.rows = rows;
-          mainWindow.webContents.send("printWorkersFilter:res", response);
-        })
-      });
-    }
-  }
-
-
-  // Filter by FIRM
-
-  if(arg.filterBy.Field === 'Firm') {
-
-    // Check if Filter by Active exist
-    if(arg.filterBy.Active){
-      db.serialize(function () {
-        let totalItems = 0;
-        db.each(`SELECT count(*) FROM Workers WHERE Firm = '${arg.filterBy.Firm}' AND Active = ${parseFloat(arg.filterBy.Active)}`, (err, rows) => {
-          totalItems = rows['count(*)'];
-        });
-        db.each(`SELECT * FROM Workers WHERE Firm = '${arg.filterBy.Firm}' AND Active = ${parseFloat(arg.filterBy.Active)} ORDER BY Id DESC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
-          let response = {};
-          response.totalItems = totalItems;
-          response.rows = rows;
-          mainWindow.webContents.send("printWorkersFilter:res", response);
-        })
-      });
-    } else {
-
-      db.serialize(function () {
-        let totalItems = 0;
-        db.each(`SELECT count(*) FROM Workers WHERE ${filter.key} = '${filter.value}'`, (err, rows) => {
-          totalItems = rows['count(*)'];
-        });
-        db.each(`SELECT * FROM Workers WHERE ${filter.key} = '${filter.value}' ORDER BY Id DESC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
-          let response = {};
-          response.totalItems = totalItems;
-          response.rows = rows;
-          mainWindow.webContents.send("printWorkersFilter:res", response);
-        })
-      });
-    }
-  }
-
-  // Filter by DATE
-  if(dateFilter){
-    if(arg.filterBy.Active){
-      db.serialize(function () {
-        let totalItems = 0;
-        db.each(`SELECT count(*) FROM Workers WHERE ${dateFilter} AND Active = ${parseFloat(arg.filterBy.Active)}`, (err, rows) => {
-          totalItems = rows['count(*)'];
-        });
-        db.each(`SELECT * FROM Workers WHERE ${dateFilter} AND Active = ${parseFloat(arg.filterBy.Active)} ORDER BY Id DESC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
-          let response = {};
-          response.totalItems = totalItems;
-          response.rows = rows;
-          mainWindow.webContents.send("printWorkersFilter:res", response);
-        })
-      });
-    } else {
-      db.serialize(function () {
-        let totalItems = 0;
-        db.each(`SELECT count(*) FROM Workers WHERE ${dateFilter} ORDER BY Name ASC`, (err, rows) => {
-          totalItems = rows['count(*)'];
-        });
-        db.each(`SELECT * FROM Workers WHERE ${dateFilter} ORDER BY Name ASC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
-          let response = {};
-          response.totalItems = totalItems;
-          response.rows = rows;
-          mainWindow.webContents.send("printWorkersFilter:res", response);
-        })
-      });
-    }
-  }
-
-});
-
-// Just Active Filter
-ipcMain.on("workerFilterActive", (event, arg) => {
-  let pageOffset = arg.pagination.currentPage * arg.pagination.perPage - arg.pagination.perPage;
-
-  db.serialize(function () {
-    let totalItems = 0;
-    db.each(`SELECT count(*) FROM Workers WHERE Active = ${parseFloat(arg.filterBy.Active)} ORDER BY Name ASC`, (err, rows) => {
+  db.serialize(() => {
+    db.get(`SELECT count(*)
+            FROM Workers
+            WHERE ${query}`, (err, rows) => {
       totalItems = rows['count(*)'];
+
+      db.all(`SELECT *
+              FROM Workers
+              WHERE ${query}
+              ORDER BY Name ASC LIMIT ${arg.pagination.perPage}
+              OFFSET ${pageOffset}`, (err, rows) => {
+        if (err) console.log(err)
+        let response = {};
+        response.totalItems = totalItems;
+        response.rows = rows;
+        mainWindow.webContents.send("printWorkersFilter:res", response);
+      })
     });
-    db.each(`SELECT * FROM Workers WHERE Active = ${parseFloat(arg.filterBy.Active)} ORDER BY Name ASC LIMIT ${arg.pagination.perPage} OFFSET ${pageOffset}`, (err, rows) => {
-      let response = {};
-      response.totalItems = totalItems;
-      response.rows = rows;
-      mainWindow.webContents.send("workerFilterActive:res", response);
-    })
-  });
+  })
 });
 
-
-ipcMain.on("printFirms", function() {
-  db.serialize(function(){
+ipcMain.on("printFirms", function () {
+  db.serialize(function () {
     db.all("SELECT * FROM Firms WHERE Active=1 ORDER BY Name ASC", (err, rows) => {
       mainWindow.webContents.send("printFirms:res", rows);
     })
@@ -298,30 +193,41 @@ ipcMain.on("printFirms", function() {
 });
 
 // Add new worker
-ipcMain.on("add-worker", function (event, arg){
-  if(!arg.End){
+ipcMain.on("add-worker", function (event, arg) {
+  if (!arg.End) {
     arg.End = null
   }
 
   db.serialize(function () {
-    db.get(`SELECT Name FROM Workers WHERE Name='${arg.Name}'`,(err, row) => {
+    db.get(`SELECT Name
+            FROM Workers
+            WHERE Name = '${arg.Name}'`, (err, row) => {
       if (row) event.returnValue = false;
-
-      db.run(`INSERT into Workers (Name, Age, Sex, Firm, Firm_id, Start, End, Active) values('${arg.Name}', '${arg.Age}', '${arg.Sex}', '${arg.Firm.Name}', ${arg.Firm.Id}, '${arg.Start}', '${arg.End}', ${parseFloat(arg.Active)})`, function(err){
-        if(err) console.log(err)
-        event.returnValue = true;
-      })
+      else {
+        db.run(`INSERT into Workers (Name, Age, Sex, Firm, Firm_id, Start, End, Active)
+                values ('${arg.Name}', '${arg.Age}', '${arg.Sex}', '${arg.Firm.Name}', ${arg.Firm.Id}, '${arg.Start}', '${arg.End}', ${parseFloat(arg.Active)})`, function (err) {
+          if (err) console.log(err)
+          event.returnValue = true;
+        })
+      }
     });
-
-    
   });
 })
 
 ipcMain.on("edit-worker", (event, arg) => {
-  if(!arg.End){
+  if (!arg.End) {
     arg.End = null
   }
-  db.run(`UPDATE Workers SET Name='${arg.Name}', Age='${arg.Age}', Sex='${arg.Sex}', Firm='${arg.Firm.Name}', Firm_id=${arg.Firm.Id}, Start='${arg.Start}', End='${arg.End}', Active=${parseFloat(arg.Active)} WHERE Id=${parseFloat(arg.Id)}`, (err) => {
+  db.run(`UPDATE Workers
+          SET Name='${arg.Name}',
+              Age='${arg.Age}',
+              Sex='${arg.Sex}',
+              Firm='${arg.Firm.Name}',
+              Firm_id=${arg.Firm.Id},
+              Start='${arg.Start}',
+              End='${arg.End}',
+              Active=${parseFloat(arg.Active)}
+          WHERE Id = ${parseFloat(arg.Id)}`, (err) => {
     if (err) {
       console.log(err)
       event.returnValue = false
@@ -337,26 +243,34 @@ ipcMain.on("delete-worker", function (event, arg) {
   db.serialize(function () {
     let errors = [];
 
-    db.run(`DELETE from Workers WHERE Id=${arg}`, function(err){
-      if(err){
+    db.run(`DELETE
+            from Workers
+            WHERE Id = ${arg}`, function (err) {
+      if (err) {
         console.log(err);
         errors.push(err);
       }
     });
-    db.run(`DELETE from Deposits WHERE Worker_id=${arg}`, function(err){
-      if(err){
+    db.run(`DELETE
+            from Deposits
+            WHERE Worker_id = ${arg}`, function (err) {
+      if (err) {
         console.log(err);
         errors.push(err);
       }
     });
-    db.run(`DELETE from History WHERE Worker_id=${arg}`, function(err){
-      if(err){
+    db.run(`DELETE
+            from History
+            WHERE Worker_id = ${arg}`, function (err) {
+      if (err) {
         console.log(err);
         errors.push(err);
       }
     });
-    db.run(`DELETE from Reports WHERE Worker_id=${arg}`, function(err){
-      if(err){
+    db.run(`DELETE
+            from Reports
+            WHERE Worker_id = ${arg}`, function (err) {
+      if (err) {
         console.log(err);
         errors.push(err);
       }
@@ -368,10 +282,11 @@ ipcMain.on("delete-worker", function (event, arg) {
 })
 
 // Add new firm
-ipcMain.on("add-firm", function (event, arg){
+ipcMain.on("add-firm", function (event, arg) {
   db.serialize(function () {
-    db.run(`INSERT into Firms (Name, Address, Active) values('${arg.Name}', '${arg.Address}', ${parseFloat(arg.Active)})`, function(err){
-      if(err){
+    db.run(`INSERT into Firms (Name, Address, Active)
+            values ('${arg.Name}', '${arg.Address}', ${parseFloat(arg.Active)})`, function (err) {
+      if (err) {
         console.log(err);
         event.returnValue = err
       } else {
@@ -386,11 +301,15 @@ ipcMain.on("delete-firm", function (event, arg) {
   db.serialize(function () {
     // Before delete firm, check if there are workers on this firm
     let check = null;
-    db.each(`SELECT count(*) FROM Workers WHERE Firm_id = '${arg.Id}'`, (err, rows) => {
+    db.each(`SELECT count(*)
+             FROM Workers
+             WHERE Firm_id = '${arg.Id}'`, (err, rows) => {
       check = rows['count(*)'];
 
-      if(check === 0) {
-        db.run(`DELETE from Firms WHERE Id=${arg.Id}`, function (err) {
+      if (check === 0) {
+        db.run(`DELETE
+                from Firms
+                WHERE Id = ${arg.Id}`, function (err) {
           if (err) {
             console.log(err);
             event.returnValue = err;
@@ -405,24 +324,32 @@ ipcMain.on("delete-firm", function (event, arg) {
   });
 });
 
-ipcMain.on("edit-firm", function(event, arg) {
+ipcMain.on("edit-firm", function (event, arg) {
   let errors = [];
   let check = null;
 
   // Check if there are workers on the firm before change firm status to inactive
-  db.each(`SELECT count(*) FROM Workers WHERE Firm_id = ${arg.Id}`, (err, rows) => {
+  db.each(`SELECT count(*)
+           FROM Workers
+           WHERE Firm_id = ${arg.Id}`, (err, rows) => {
     check = rows['count(*)'];
 
     if (check > 0 && parseFloat(arg.Active) === 0) {
       errors.push('workers_err');
 
     } else {
-      db.run(`UPDATE Firms SET Name='${arg.Name}', Address='${arg.Address}', Active=${parseFloat(arg.Active)} WHERE Id=${parseFloat(arg.Id)}`, (err) => {
+      db.run(`UPDATE Firms
+              SET Name='${arg.Name}',
+                  Address='${arg.Address}',
+                  Active=${parseFloat(arg.Active)}
+              WHERE Id = ${parseFloat(arg.Id)}`, (err) => {
         if (err) {
           errors.push(err);
         }
       });
-      db.run(`UPDATE Workers SET Firm='${arg.Name}' WHERE Firm_id=${parseFloat(arg.Id)}`, (err) => {
+      db.run(`UPDATE Workers
+              SET Firm='${arg.Name}'
+              WHERE Firm_id = ${parseFloat(arg.Id)}`, (err) => {
         if (err) {
           errors.push(err);
         }
@@ -435,16 +362,19 @@ ipcMain.on("edit-firm", function(event, arg) {
 });
 
 // ============= Hours API ==============
-ipcMain.on("add-salary", function (event, arg){
-  arg.Hours = arg.Hours.replace(',','.')
+ipcMain.on("add-salary", function (event, arg) {
+  arg.Hours = arg.Hours.replace(',', '.')
   db.serialize(function () {
     // If hours added to worker in current month -> show err
-    db.each(`SELECT count(*) FROM History WHERE Worker_id=${arg.Worker.Id} AND Firm='${arg.Firm.Name}' AND Month BETWEEN ${parseFloat(arg.MonthStart)} AND ${parseFloat(arg.MonthEnd)}`, (err, rows) => {
-      if(rows['count(*)'] > 0){
+    db.each(`SELECT count(*)
+             FROM History
+             WHERE Worker_id = ${arg.Worker.Id} AND Firm = '${arg.Firm.Name}' AND Month BETWEEN ${parseFloat(arg.MonthStart)} AND ${parseFloat(arg.MonthEnd)}`, (err, rows) => {
+      if (rows['count(*)'] > 0) {
         event.returnValue = 'err_exist'
       } else {
-        db.run(`INSERT into History (Worker_id, Worker_name, Month, Hours, Firm) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseFloat(arg.MonthStart)}, '${arg.Hours}', '${arg.Firm.Name}')`, function(err){
-          if(err){
+        db.run(`INSERT into History (Worker_id, Worker_name, Month, Hours, Firm)
+                values (${arg.Worker.Id}, '${arg.Worker.Name}', ${parseFloat(arg.MonthStart)}, '${arg.Hours}', '${arg.Firm.Name}')`, function (err) {
+          if (err) {
             console.log(err);
             event.returnValue = false;
           } else {
@@ -458,7 +388,7 @@ ipcMain.on("add-salary", function (event, arg){
   });
 });
 
-ipcMain.on("fetchHoursHistory", function(event, arg) {
+ipcMain.on("fetchHoursHistory", function (event, arg) {
   let query = '';
   if (arg.month) query += `AND Month BETWEEN ${parseFloat(arg.month.MonthStart)} AND ${parseFloat(arg.month.MonthEnd)}`
   if (arg.firm) query += ` AND Firm='${arg.firm}'`
@@ -466,9 +396,11 @@ ipcMain.on("fetchHoursHistory", function(event, arg) {
   query += ` ORDER BY Worker_name ASC`
 
   const result = []
-  db.serialize(function(){
-    db.each(`SELECT * FROM History WHERE Hours!='' AND Report_id IS NULL ${query}`, (err, rows) => {
-      if(err) console.log(err)
+  db.serialize(function () {
+    db.each(`SELECT *
+             FROM History
+             WHERE Hours!='' AND Report_id IS NULL ${query}`, (err, rows) => {
+      if (err) console.log(err)
       result.push(rows)
     }, () => {
       mainWindow.webContents.send("fetchHoursHistory:res", result);
@@ -477,8 +409,11 @@ ipcMain.on("fetchHoursHistory", function(event, arg) {
 });
 
 ipcMain.on("update-hours", (event, arg) => {
-  if(!arg.Report_id){
-    db.run(`UPDATE History SET Hours=${parseFloat(arg.Hours)}, Firm='${arg.Firm}' WHERE Id=${parseFloat(arg.Id)}`, (err) => {
+  if (!arg.Report_id) {
+    db.run(`UPDATE History
+            SET Hours=${parseFloat(arg.Hours)},
+                Firm='${arg.Firm}'
+            WHERE Id = ${parseFloat(arg.Id)}`, (err) => {
       if (err) {
         console.log(err);
         event.returnValue = false
@@ -492,28 +427,41 @@ ipcMain.on("update-hours", (event, arg) => {
 });
 
 // ========== Worker Info API ==========
-ipcMain.on("fetchWorkerInfo", function(event, arg) {
-  db.serialize(function(){
-    db.each(`SELECT * FROM History WHERE Worker_id = ${parseFloat(arg)} ORDER BY Id`, (err, rows) => {
+ipcMain.on("fetchWorkerInfo", function (event, arg) {
+  db.serialize(function () {
+    db.each(`SELECT *
+             FROM History
+             WHERE Worker_id = ${parseFloat(arg)}
+             ORDER BY Id`, (err, rows) => {
       mainWindow.webContents.send("fetchWorkerInfo:res", rows);
     });
-    db.each(`SELECT * FROM Deposits WHERE Worker_id = ${parseFloat(arg)} ORDER BY Id`, (err, rows) => {
+    db.each(`SELECT *
+             FROM Deposits
+             WHERE Worker_id = ${parseFloat(arg)}
+             ORDER BY Id`, (err, rows) => {
       mainWindow.webContents.send("fetchWorkerInfoDeposits:res", rows);
     });
-    db.each(`SELECT * FROM Reports WHERE Worker_id = ${parseFloat(arg)} ORDER BY Id`, (err, rows) => {
-      if(err) console.log(err);
+    db.each(`SELECT *
+             FROM Reports
+             WHERE Worker_id = ${parseFloat(arg)}
+             ORDER BY Id`, (err, rows) => {
+      if (err) console.log(err);
       mainWindow.webContents.send("fetchWorkerInfoReports:res", rows);
     });
-    db.each(`SELECT Name, Deposit FROM Workers WHERE Id = ${arg}`, (err, rows) => {
+    db.each(`SELECT Name, Deposit
+             FROM Workers
+             WHERE Id = ${arg}`, (err, rows) => {
       mainWindow.webContents.send("fetchWorkerInfoCurrentDeposit:res", rows);
     })
 
   });
 });
-ipcMain.on("delete-history", function(event, arg) {
-  db.serialize(function(){
-    db.run(`DELETE FROM History WHERE Id=${parseFloat(arg)}`, function (err) {
-      if(err){
+ipcMain.on("delete-history", function (event, arg) {
+  db.serialize(function () {
+    db.run(`DELETE
+            FROM History
+            WHERE Id = ${parseFloat(arg)}`, function (err) {
+      if (err) {
         console.log(err);
         event.returnValue = false
       } else {
@@ -524,36 +472,43 @@ ipcMain.on("delete-history", function(event, arg) {
 });
 
 // ========== Deposit API ==========
-ipcMain.on("autocompleteWorkersDeposit", function() {
+ipcMain.on("autocompleteWorkersDeposit", function () {
   const result = []
-  db.serialize(function(){
-    db.each(`SELECT Id, Name FROM Workers ORDER BY Name`, (err, rows) => {
+  db.serialize(function () {
+    db.each(`SELECT Id, Name
+             FROM Workers
+             ORDER BY Name`, (err, rows) => {
       result.push(rows)
     }, () => {
       mainWindow.webContents.send("autocompleteWorkersDeposit:res", result);
     })
   });
 });
-ipcMain.on("add-deposit", function (event, arg){
+ipcMain.on("add-deposit", function (event, arg) {
   let errors = [];
   console.log(arg);
-  if(!arg.Comment) arg.Comment = ''
+  if (!arg.Comment) arg.Comment = ''
 
   db.serialize(function () {
-    db.run(`INSERT into Deposits (Worker_id, Worker_name, Date, Money, Comment) values(${arg.Worker.Id}, '${arg.Worker.Name}', ${parseFloat(arg.Date)}, ${parseFloat(arg.Money)}, '${arg.Comment}')`, function(err){
-      if(err){
+    db.run(`INSERT into Deposits (Worker_id, Worker_name, Date, Money, Comment)
+            values (${arg.Worker.Id}, '${arg.Worker.Name}', ${parseFloat(arg.Date)}, ${parseFloat(arg.Money)}, '${arg.Comment}')`, function (err) {
+      if (err) {
         console.log(err);
         errors.push(err);
       }
     })
   });
   // Update current worker deposit
-  db.each(`SELECT Deposit FROM Workers WHERE Id=${parseFloat(arg.Worker.Id)}`, (err, rows) => {
+  db.each(`SELECT Deposit
+           FROM Workers
+           WHERE Id = ${parseFloat(arg.Worker.Id)}`, (err, rows) => {
     let deposit = rows['Deposit'];
 
     deposit ? deposit += parseFloat(arg.Money) : deposit = parseFloat(arg.Money);
 
-    db.run(`UPDATE Workers SET Deposit=${deposit} WHERE Id=${parseFloat(arg.Worker.Id)}`, (err) => {
+    db.run(`UPDATE Workers
+            SET Deposit=${deposit}
+            WHERE Id = ${parseFloat(arg.Worker.Id)}`, (err) => {
       if (err) {
         console.log(err);
         errors.push(err);
@@ -564,33 +519,42 @@ ipcMain.on("add-deposit", function (event, arg){
   errors.length > 0 ? event.returnValue = false : event.returnValue = true;
 
 });
-ipcMain.on("fetchCurrentDeposit", function(event, arg) {
-  db.serialize(function(){
-    db.each(`SELECT * FROM Deposits WHERE Id=${arg} ORDER BY Id DESC`, (err, rows) => {
+ipcMain.on("fetchCurrentDeposit", function (event, arg) {
+  db.serialize(function () {
+    db.each(`SELECT *
+             FROM Deposits
+             WHERE Id = ${arg}
+             ORDER BY Id DESC`, (err, rows) => {
       mainWindow.webContents.send("fetchCurrentDeposit:res", rows);
     })
   });
 });
-ipcMain.on("fetchDepositHistory", function() {
+ipcMain.on("fetchDepositHistory", function () {
   const result = []
-  db.serialize(function(){
-    db.each(`SELECT * FROM Deposits ORDER BY Id DESC`, (err, rows) => {
-      if(err) console.log(err)
+  db.serialize(function () {
+    db.each(`SELECT *
+             FROM Deposits
+             ORDER BY Id DESC`, (err, rows) => {
+      if (err) console.log(err)
       result.push(rows)
     }, () => {
       mainWindow.webContents.send("fetchDepositHistory:res", result)
     })
   });
 });
-ipcMain.on("delete-deposit", function(event, arg) {
-  db.serialize(function(){
-    db.run(`DELETE FROM Deposits WHERE Id=${parseFloat(arg.Id)}`, function (err) {
-      if(err){
+ipcMain.on("delete-deposit", function (event, arg) {
+  db.serialize(function () {
+    db.run(`DELETE
+            FROM Deposits
+            WHERE Id = ${parseFloat(arg.Id)}`, function (err) {
+      if (err) {
         console.log(err);
         event.returnValue = false
       } else {
         if (!arg.Report_id) {
-          db.run(`UPDATE Workers SET Deposit= Deposit - ${parseFloat(arg.Money)} WHERE Id=${parseFloat(arg.Worker_id)}`, (err) => {
+          db.run(`UPDATE Workers
+                  SET Deposit= Deposit - ${parseFloat(arg.Money)}
+                  WHERE Id = ${parseFloat(arg.Worker_id)}`, (err) => {
             if (err) {
               console.log(err);
               event.returnValue = false;
@@ -607,12 +571,18 @@ ipcMain.on("delete-deposit", function(event, arg) {
   });
 });
 ipcMain.on("update-deposit", (event, arg) => {
-  db.run(`UPDATE Deposits SET Date=${parseFloat(arg.Date)}, Money=${parseFloat(arg.Money)}, Comment='${arg.Comment}' WHERE Id=${parseFloat(arg.Id)}`, (err) => {
+  db.run(`UPDATE Deposits
+          SET Date=${parseFloat(arg.Date)},
+              Money=${parseFloat(arg.Money)},
+              Comment='${arg.Comment}'
+          WHERE Id = ${parseFloat(arg.Id)}`, (err) => {
     if (err) {
       console.log(err);
       event.returnValue = false
     } else {
-      db.run(`UPDATE Workers SET Deposit= Deposit - ${parseFloat(arg.oldMoney) - parseFloat(arg.Money)} WHERE Id=${parseFloat(arg.Worker_id)}`, (err) => {
+      db.run(`UPDATE Workers
+              SET Deposit= Deposit - ${parseFloat(arg.oldMoney) - parseFloat(arg.Money)}
+              WHERE Id = ${parseFloat(arg.Worker_id)}`, (err) => {
         if (err) {
           console.log(err);
           event.returnValue = false
@@ -629,42 +599,67 @@ ipcMain.on("update-deposit", (event, arg) => {
 
 
 // Fetch workers for current month and firm, which don't receive salary
-ipcMain.on("reportFetchWorkers", function(event, arg) {
-  db.serialize(function(){
-    db.each(`SELECT * FROM History WHERE Firm='${arg.Firm}' AND Month=${parseFloat(arg.Month)} AND ifnull(Report_id, '') = '' ORDER BY Worker_name`, (err, rows) => {
+ipcMain.on("reportFetchWorkers", function (event, arg) {
+  db.serialize(function () {
+    db.each(`SELECT *
+             FROM History
+             WHERE Firm = '${arg.firm}' AND Month BETWEEN ${parseFloat(arg.start)} AND ${parseFloat(arg.end)} AND ifnull(Report_id, '') = ''
+             ORDER BY Worker_name`, (err, rows) => {
+      if (err) console.log(err)
       mainWindow.webContents.send("reportFetchWorkers:res", rows);
     })
   });
 });
-ipcMain.on("reportWorkerAutocomplete", function(event, arg) {
-  db.serialize(function(){
-    db.each(`SELECT * FROM History WHERE Month=${parseFloat(arg)} AND ifnull(Report_id, '') = '' ORDER BY Worker_name`, (err, rows) => {
+ipcMain.on("reportWorkerAutocomplete", function (event, arg) {
+  console.log(arg)
+  db.serialize(function () {
+    db.all(`SELECT *
+             FROM History
+             WHERE ifnull(Report_id, '') = '' AND Month BETWEEN ${parseFloat(arg.start)} AND ${parseFloat(arg.end)} 
+             ORDER BY Worker_name`, (err, rows) => {
       mainWindow.webContents.send("reportWorkerAutocomplete:res", rows);
     })
   });
 });
 
-ipcMain.on("reportWorkerData", function(event, arg) {
-  db.serialize(function(){
-    db.each(`SELECT History.Id, Worker_id, Worker_name, Month, Hours, History.Firm, Deposit, Rate FROM History INNER JOIN Workers on History.Worker_id=Workers.Id WHERE Workers.Id=${parseFloat(arg.Worker_id)} AND History.Month=${parseFloat(arg.Month)} AND History.Firm='${arg.Firm}'`, (err, rows) => {
+ipcMain.on("reportWorkerData", function (event, arg) {
+  db.serialize(function () {
+    db.each(`SELECT History.Id, Worker_id, Worker_name, Month, Hours, History.Firm, Deposit, Rate
+             FROM History INNER JOIN Workers
+             on History.Worker_id=Workers.Id
+             WHERE Workers.Id=${parseFloat(arg.Worker_id)}
+               AND History.Month=${parseFloat(arg.Month)}
+               AND History.Firm='${arg.Firm}'`, (err, rows) => {
       mainWindow.webContents.send("reportWorkerData:res", rows);
     })
   });
 });
 
-ipcMain.on("saveReport", function (event, arg){
+ipcMain.on("saveReport", function (event, arg) {
   db.serialize(function () {
-    if(!arg.Other) arg.Other = 0;
-    if(!arg.Insurance) arg.Insurance = 0;
-    db.run(`INSERT into Reports (Worker_name, Worker_id, Firm, Month, Rate, Hours, Salary, Insurance, Deposit, Other, Total) values('${arg.Worker_name}', '${arg.Worker_id}', '${arg.Firm}', ${parseFloat(arg.Month)}, ${parseFloat(arg.Rate)}, ${parseFloat(arg.Hours)}, ${parseFloat(arg.Salary)}, ${parseFloat(arg.Insurance)}, '${arg.Deposit}', ${parseFloat(arg.Other)}, ${parseFloat(arg.Total)})`, function(err){
-      if(err) console.log(err);
+    if (!arg.Other) arg.Other = 0;
+    if (!arg.Insurance) arg.Insurance = 0;
+    db.run(`INSERT into Reports (Worker_name, Worker_id, Firm, Month, Rate, Hours, Salary, Insurance, Deposit, Other,
+                                 Total)
+            values ('${arg.Worker_name}', '${arg.Worker_id}', '${arg.Firm}', ${parseFloat(arg.Month)},
+                    ${parseFloat(arg.Rate)}, ${parseFloat(arg.Hours)}, ${parseFloat(arg.Salary)},
+                    ${parseFloat(arg.Insurance)}, '${arg.Deposit}', ${parseFloat(arg.Other)},
+                    ${parseFloat(arg.Total)})`, function (err) {
+      if (err) console.log(err);
     });
-    db.each(`SELECT Id From Reports WHERE Worker_id=${arg.Worker_id} AND Firm='${arg.Firm}' AND Month=${parseFloat(arg.Month)}`, (err, rows) => {
+    db.each(`SELECT Id
+             From Reports
+             WHERE Worker_id = ${arg.Worker_id} AND Firm = '${arg.Firm}' AND Month = ${parseFloat(arg.Month)}`, (err, rows) => {
       // arg.Id - current Hours item Id
-      db.run(`UPDATE History SET Report_id=${rows.Id} WHERE Id=${parseFloat(arg.Id)}`, (err) => {
+      db.run(`UPDATE History
+              SET Report_id=${rows.Id}
+              WHERE Id = ${parseFloat(arg.Id)}`, (err) => {
         if (err) console.log(err);
       });
-      db.run(`UPDATE Deposits SET Report_id=${rows.Id} WHERE Worker_id=${parseFloat(arg.Worker_id)} AND ifnull(Report_id, '') = ''`, (err) => {
+      db.run(`UPDATE Deposits
+              SET Report_id=${rows.Id}
+              WHERE Worker_id = ${parseFloat(arg.Worker_id)}
+                AND ifnull(Report_id, '') = ''`, (err) => {
         if (err) console.log(err);
       });
     });
@@ -673,7 +668,10 @@ ipcMain.on("saveReport", function (event, arg){
 
 // Update worker rate and deposit
 ipcMain.on("newDepositRate", (event, arg) => {
-  db.run(`UPDATE Workers SET Rate=${parseFloat(arg.Rate)}, Deposit='${arg.Deposit}' WHERE Id=${parseFloat(arg.Worker_id)}`, (err) => {
+  db.run(`UPDATE Workers
+          SET Rate=${parseFloat(arg.Rate)},
+              Deposit='${arg.Deposit}'
+          WHERE Id = ${parseFloat(arg.Worker_id)}`, (err) => {
     if (err) console.log(err);
 
   });
@@ -681,10 +679,13 @@ ipcMain.on("newDepositRate", (event, arg) => {
 
 // ======= Edit, Delete Hours and Deposit check =======
 
-ipcMain.on("deposit-check-salary", function(event, arg) {
-  db.serialize(function(){
-    db.each(`SELECT Id FROM Reports WHERE Worker_id='${arg.Worker_id}' ORDER BY Id DESC LIMIT 1`, (err, rows) => {
-      if(rows) {
+ipcMain.on("deposit-check-salary", function (event, arg) {
+  db.serialize(function () {
+    db.each(`SELECT Id
+             FROM Reports
+             WHERE Worker_id = '${arg.Worker_id}'
+             ORDER BY Id DESC LIMIT 1`, (err, rows) => {
+      if (rows) {
         if (rows.Id === arg.Report_id) {
           event.returnValue = 1
         } else {
@@ -697,30 +698,38 @@ ipcMain.on("deposit-check-salary", function(event, arg) {
   });
 });
 
-ipcMain.on("delete-report", function(event, arg) {
-  db.serialize(function(){
-    let errors= [],
+ipcMain.on("delete-report", function (event, arg) {
+  db.serialize(function () {
+    let errors = [],
       currentDeposit = 0;
 
-    db.run(`DELETE FROM Reports WHERE Id=${parseFloat(arg.Id)}`, function (err) {
-      if(err) {
+    db.run(`DELETE
+            FROM Reports
+            WHERE Id = ${parseFloat(arg.Id)}`, function (err) {
+      if (err) {
         errors.push(err);
         console.log(err)
       }
     });
-    db.run(`UPDATE History SET Report_id='' WHERE Worker_id=${arg.Worker_id} AND Firm='${arg.Firm}' AND Month=${parseFloat(arg.Month)}`, (err) => {
+    db.run(`UPDATE History
+            SET Report_id=''
+            WHERE Worker_id = ${arg.Worker_id} AND Firm = '${arg.Firm}' AND Month = ${parseFloat(arg.Month)}`, (err) => {
       if (err) errors.push(err);
     });
-    db.run(`UPDATE Deposits SET Report_id='' WHERE Report_id=${arg.Id}`, (err) => {
+    db.run(`UPDATE Deposits
+            SET Report_id=''
+            WHERE Report_id = ${arg.Id}`, (err) => {
       if (err) errors.push(err);
     });
 
-    if(parseFloat(arg.Total) === 0){
+    if (parseFloat(arg.Total) === 0) {
       currentDeposit = arg.Salary - arg.Insurance;
     } else {
       currentDeposit = arg.Deposit;
     }
-    db.run(`UPDATE Workers SET Deposit= Deposit + '${currentDeposit}' WHERE Id=${parseFloat(arg.Worker_id)}`, (err) => {
+    db.run(`UPDATE Workers
+            SET Deposit= Deposit + '${currentDeposit}'
+            WHERE Id = ${parseFloat(arg.Worker_id)}`, (err) => {
       if (err) errors.push(err);
     });
 
@@ -731,16 +740,18 @@ ipcMain.on("delete-report", function(event, arg) {
 
 // ======= Default Page =======
 
-ipcMain.on("getWorkersCount", function(event) {
-  db.serialize(function(){
-    db.each(`SELECT count(*) FROM Workers`, (err, rows) => {
+ipcMain.on("getWorkersCount", function (event) {
+  db.serialize(function () {
+    db.each(`SELECT count(*)
+             FROM Workers`, (err, rows) => {
       event.sender.send('getWorkersCount:res', rows['count(*)'])
     })
   });
 });
-ipcMain.on("getFirmsCount", function(event) {
-  db.serialize(function(){
-    db.each(`SELECT count(*) FROM Firms`, (err, rows) => {
+ipcMain.on("getFirmsCount", function (event) {
+  db.serialize(function () {
+    db.each(`SELECT count(*)
+             FROM Firms`, (err, rows) => {
       event.sender.send('getFirmsCount:res', rows['count(*)'])
     })
   });
