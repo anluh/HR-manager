@@ -90,7 +90,7 @@
         }
       }
     },
-    created() {
+    mounted() {
       this.newSalary.Id = this.$route.params.history.Id;
       this.newSalary.Worker.Name = this.$route.params.history.Worker_name;
       this.newSalary.Worker.Id = this.$route.params.history.Worker_id;

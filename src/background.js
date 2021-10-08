@@ -435,29 +435,37 @@ ipcMain.on("update-hours", (event, arg) => {
 
 // ========== Worker Info API ==========
 ipcMain.on("fetchWorkerInfo", function (event, arg) {
+  let yearDeposit=''
+  let yearMonth=''
+
+  if(arg.start) {
+    yearDeposit=`AND Date BETWEEN ${parseInt(arg.start)} AND ${parseInt(arg.end)}`
+    yearMonth=`AND Month BETWEEN ${parseInt(arg.start)} AND ${parseInt(arg.end)}`
+  }
+
   db.serialize(function () {
-    db.each(`SELECT *
+    db.all(`SELECT *
              FROM History
-             WHERE Worker_id = ${parseFloat(arg)}
+             WHERE Worker_id = ${parseFloat(arg.id)} ${yearMonth}
              ORDER BY Id`, (err, rows) => {
       mainWindow.webContents.send("fetchWorkerInfo:res", rows);
     });
-    db.each(`SELECT *
+    db.all(`SELECT *
              FROM Deposits
-             WHERE Worker_id = ${parseFloat(arg)}
+             WHERE Worker_id = ${parseFloat(arg.id)} ${yearDeposit}
              ORDER BY Id`, (err, rows) => {
       mainWindow.webContents.send("fetchWorkerInfoDeposits:res", rows);
     });
-    db.each(`SELECT *
+    db.all(`SELECT *
              FROM Reports
-             WHERE Worker_id = ${parseFloat(arg)}
+             WHERE Worker_id = ${parseFloat(arg.id)} ${yearMonth}
              ORDER BY Id`, (err, rows) => {
       if (err) console.log(err);
       mainWindow.webContents.send("fetchWorkerInfoReports:res", rows);
     });
-    db.each(`SELECT Name, Deposit
+    db.get(`SELECT Name, Deposit
              FROM Workers
-             WHERE Id = ${arg}`, (err, rows) => {
+             WHERE Id = ${arg.id}`, (err, rows) => {
       mainWindow.webContents.send("fetchWorkerInfoCurrentDeposit:res", rows);
     })
 
