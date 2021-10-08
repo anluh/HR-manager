@@ -237,7 +237,7 @@ export default {
   },
   filters: {
     dateFormatter(value) {
-      return window.moment(parseFloat(value)).format('DD.MM.YYYY')
+      return window.moment(parseFloat(value)).format('MM.YYYY')
     }
   },
   beforeDestroy() {

@@ -10,8 +10,8 @@ export default new Router({
   routes: [
     {
       path: '*',
-      name: 'default',
-      component: () => import('./views/Default.vue')
+      name: 'info',
+      component: () => import('./views/Info.vue')
     },
     {
       path: '/workers',

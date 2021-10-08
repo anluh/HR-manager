@@ -338,8 +338,8 @@ ipcMain.on("edit-firm", function (event, arg) {
 
   // Check if there are workers on the firm before change firm status to inactive
   db.get(`SELECT count(*)
-           FROM Workers
-           WHERE Firm_id = ${arg.Id}`, (err, rows) => {
+          FROM Workers
+          WHERE Firm_id = ${arg.Id}`, (err, rows) => {
     check = rows['count(*)']
 
     if (check > 0 && parseFloat(arg.Active) === 0) {
@@ -610,7 +610,8 @@ ipcMain.on("reportFetchWorkers", function (event, arg) {
   db.serialize(function () {
     db.each(`SELECT *
              FROM History
-             WHERE Firm = '${arg.firm}' AND Month BETWEEN ${parseFloat(arg.start)} AND ${parseFloat(arg.end)} AND ifnull(Report_id, '') = ''
+             WHERE Firm = '${arg.firm}' AND Month BETWEEN ${parseFloat(arg.start)} AND ${parseFloat(arg.end)}
+               AND ifnull(Report_id, '') = ''
              ORDER BY Worker_name`, (err, rows) => {
       if (err) console.log(err)
       mainWindow.webContents.send("reportFetchWorkers:res", rows);
@@ -621,9 +622,9 @@ ipcMain.on("reportWorkerAutocomplete", function (event, arg) {
   console.log(arg)
   db.serialize(function () {
     db.all(`SELECT *
-             FROM History
-             WHERE ifnull(Report_id, '') = '' AND Month BETWEEN ${parseFloat(arg.start)} AND ${parseFloat(arg.end)} 
-             ORDER BY Worker_name`, (err, rows) => {
+            FROM History
+            WHERE ifnull(Report_id, '') = '' AND Month BETWEEN ${parseFloat(arg.start)} AND ${parseFloat(arg.end)}
+            ORDER BY Worker_name`, (err, rows) => {
       mainWindow.webContents.send("reportWorkerAutocomplete:res", rows);
     })
   });
@@ -747,19 +748,36 @@ ipcMain.on("delete-report", function (event, arg) {
 
 // ======= Default Page =======
 
-ipcMain.on("getWorkersCount", function (event) {
+ipcMain.on("getInfoWorkers", (event) => {
   db.serialize(function () {
-    db.each(`SELECT count(*)
-             FROM Workers`, (err, rows) => {
-      event.sender.send('getWorkersCount:res', rows['count(*)'])
+    db.all(`SELECT Name, Id
+            FROM Workers
+            ORDER BY Name ASC`, (err, rows) => {
+      event.sender.send('getInfoWorkers:res', rows)
     })
   });
 });
-ipcMain.on("getFirmsCount", function (event) {
+ipcMain.on("getInfoFirms", (event) => {
   db.serialize(function () {
-    db.each(`SELECT count(*)
-             FROM Firms`, (err, rows) => {
-      event.sender.send('getFirmsCount:res', rows['count(*)'])
+    db.all(`SELECT Name, Id
+            FROM Firms
+            ORDER BY Name ASC`, (err, rows) => {
+      event.sender.send('getInfoFirms:res', rows)
+    })
+  });
+});
+
+ipcMain.on("fetchInfoHistory", (event, arg) => {
+  let query = arg.worker ? ` Worker_name='${arg.worker}'` : `Worker_name IS NOT NULL`
+  if (arg.firm) query += ` AND Firm='${arg.firm}'`
+  if (arg.start) query += ` AND Month BETWEEN ${parseInt(arg.start)} AND ${parseInt(arg.end)}`
+
+  db.serialize(function () {
+    db.all(`SELECT *
+            FROM Reports
+            WHERE ${query}
+            ORDER BY Worker_name ASC`, (err, rows) => {
+      mainWindow.webContents.send('fetchInfoHistory:res', rows)
     })
   });
 });
