@@ -46,7 +46,7 @@ export default {
       firms: 0
     }
   },
-  created() {
+  mounted() {
     ipcRenderer.on('ChangeCurrentDB:res', () => {
       window.location.reload(true)
     })

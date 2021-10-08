@@ -120,7 +120,7 @@ export default {
       }
     }
   },
-  created() {
+  mounted() {
     this.fetchAutocompleteWorkersDeposit();
     ipcRenderer.on("autocompleteWorkersDeposit:res", (evt, result) => {
       this.workers = [...result]

@@ -82,7 +82,7 @@ export default {
       }
     }
   },
-  created() {
+  mounted() {
     if (this.editPage) this.previousData()
   },
   computed: {
