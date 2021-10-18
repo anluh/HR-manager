@@ -434,8 +434,10 @@ export default {
       ipcRenderer.send("reportWorkerData", worker);
     },
     addToReportAutocomp() {
-      this.addToReport(this.workerAutocomplete);
-      this.workers[this.workers.indexOf(this.workerAutocomplete)].active = 1;
+      if (this.workerAutocomplete) {
+        this.addToReport(this.workerAutocomplete);
+        this.workers[this.workers.indexOf(this.workerAutocomplete)].active = 1;
+      }
     },
     deleteReport(report) {
       this.report.splice(this.report.indexOf(report), 1);
@@ -535,8 +537,11 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="stylus">
 @import '../styles/variables.styl';
 @import '../styles/main.styl';
 @import '../styles/report.styl';
+
+  .total-money
+    justify-content flex-end
 </style>

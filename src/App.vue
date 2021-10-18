@@ -44,5 +44,6 @@
 @import "~vue-multiselect/dist/vue-multiselect.min.css"
 @import 'styles/input.styl';
 @import "styles/main.styl";
+@import '../styles/report.styl';
 
 </style>

@@ -216,6 +216,9 @@ export default {
     "newWorker.startDate"(value) {
       this.newWorker.Start = window.moment(value, "MM.YYYY").valueOf();
     },
+    "newWorker.Name"() {
+      this.workers_err = 0
+    },
     "newWorker.endDate"(value) {
       if (value) {
         this.newWorker.End = window.moment(value, "MM.YYYY").valueOf();

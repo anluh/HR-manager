@@ -406,7 +406,7 @@ ipcMain.on("fetchHoursHistory", function (event, arg) {
   db.serialize(function () {
     db.each(`SELECT *
              FROM History
-             WHERE Hours!='' AND Report_id IS NULL ${query}`, (err, rows) => {
+             WHERE Hours!='' ${query}`, (err, rows) => {
       if (err) console.log(err)
       result.push(rows)
     }, () => {
@@ -435,6 +435,7 @@ ipcMain.on("update-hours", (event, arg) => {
 
 // ========== Worker Info API ==========
 ipcMain.on("fetchWorkerInfo", function (event, arg) {
+  console.log(arg)
   let yearDeposit=''
   let yearMonth=''
 
@@ -544,16 +545,15 @@ ipcMain.on("fetchCurrentDeposit", function (event, arg) {
     })
   });
 });
-ipcMain.on("fetchDepositHistory", function () {
-  const result = []
+ipcMain.on("fetchDepositHistory", function (event, worker) {
+  const query = worker ? `WHERE Worker_name='${worker}'` : ''
+
   db.serialize(function () {
-    db.each(`SELECT *
-             FROM Deposits
-             ORDER BY Id DESC`, (err, rows) => {
+    db.all(`SELECT *
+             FROM Deposits ${query}
+             ORDER BY Id DESC LIMIT 100`, (err, rows) => {
       if (err) console.log(err)
-      result.push(rows)
-    }, () => {
-      mainWindow.webContents.send("fetchDepositHistory:res", result)
+      mainWindow.webContents.send("fetchDepositHistory:res", rows)
     })
   });
 });

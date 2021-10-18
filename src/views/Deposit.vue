@@ -120,6 +120,11 @@ export default {
       }
     }
   },
+  watch: {
+    'newDeposit.Worker'() {
+      this.fetchDepositHistory()
+    }
+  },
   mounted() {
     this.fetchAutocompleteWorkersDeposit();
     ipcRenderer.on("autocompleteWorkersDeposit:res", (evt, result) => {
@@ -147,16 +152,17 @@ export default {
       }
     },
     fetchAutocompleteWorkersDeposit() {
-      this.workers.splice(0, this.workers.length);
-      ipcRenderer.send('autocompleteWorkersDeposit');
+      this.workers= []
+      ipcRenderer.send('autocompleteWorkersDeposit')
     },
     fetchDepositHistory() {
-      this.histories.splice(0, this.histories.length);
-      ipcRenderer.send("fetchDepositHistory")
+      this.histories = []
+      const worker = this.newDeposit.Worker ? this.newDeposit.Worker.Name : ''
+      ipcRenderer.send("fetchDepositHistory", worker)
     },
     deleteHistory(history) {
       if (ipcRenderer.sendSync('delete-deposit', history)) {
-        this.fetchDepositHistory();
+        this.fetchDepositHistory()
       }
     },
     depositsCheckSalary(deposit) {

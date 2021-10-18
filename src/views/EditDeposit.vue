@@ -65,7 +65,7 @@
         }
       }
     },
-    created() {
+    mounted() {
       let v = this;
 
       ipcRenderer.send("fetchCurrentDeposit", this.$route.params.deposit.Id);

@@ -174,16 +174,24 @@ export default {
       year: "",
     };
   },
+  computed: {
+    startEndYear() {
+      return {
+        start: this.year,
+        end: moment(this.year).add(1, 'years').subtract(1, 'days').valueOf() || '',
+      }
+    },
+    today() {
+      return moment(moment(new Date()).format('YYYY')).valueOf(); // get full year 1.01
+    },
+  },
   watch: {
     year() {
       this.fetchWorkerInfo()
     }
   },
   mounted() {
-    let historys = this.historys;
-    let deposits = this.deposits;
-    let reports = this.reports;
-    let v = this;
+    this.year = this.today
 
     this.fetchWorkerInfo();
     ipcRenderer.on("fetchWorkerInfo:res", (evt, result) => {
@@ -207,14 +215,6 @@ export default {
     dateFormatterDay(value) {
       return window.moment(parseFloat(value)).format("DD.MM.YYYY");
     },
-  },
-  computed: {
-    startEndYear() {
-      return {
-        start: this.year,
-        end: moment(this.year).add(1, 'years').subtract(1, 'days').valueOf() || '',
-      }
-    }
   },
   methods: {
     deleteHistory(history) {

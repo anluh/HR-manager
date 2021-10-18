@@ -46,7 +46,7 @@
       </div>
 
       <div class="pagination-section">
-        <div class="items-per-page">
+        <div class="items-per-page" v-if="pagination.totalItems > pagination.perPage">
           <span>Items per page</span>
           <div class="input-field col s12 m6">
             <multiselect
@@ -109,7 +109,7 @@
         </tbody>
       </table>
       <div class="pagination-section">
-        <div class="items-per-page">
+        <div class="items-per-page" v-if="pagination.totalItems > pagination.perPage">
           <span>Items per page</span>
           <div class="input-field col s12 m6">
             <multiselect

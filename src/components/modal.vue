@@ -27,7 +27,7 @@
         open: false
       }
     },
-    created(){
+    mounted(){
       this.open = this.openProp;
     },
     props:{

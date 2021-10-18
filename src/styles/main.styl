@@ -188,7 +188,9 @@ body
   background transparent
   border: none
   cursor: pointer
-  padding 10px
+
+  table &
+    padding 10px
 
   &:hover i
     color: $main-light
@@ -279,6 +281,19 @@ body
     width: 200px
   input[type='text'].date-filter
     width: 120px
+
+    
+  &.full-filters
+    &>*
+      flex: 1
+      margin-right: 15px
+
+      &:last-child
+        margin-right: 0
+
+    .multiselect,
+    .mx-datepicker
+      width: 100%
 
   &__date
     display: flex
