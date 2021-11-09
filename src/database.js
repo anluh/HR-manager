@@ -76,6 +76,7 @@ function CreateDatabase(db, callback) {
           \t\`Deposit\`\tTEXT,
           \t\`Other\`\tNUMERIC,
           \t\`Total\`\tNUMERIC NOT NULL,
+          \t\`Salary_date\`\tINTEGER,
           \tPRIMARY KEY(Id)
           )`
     )

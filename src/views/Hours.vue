@@ -63,8 +63,9 @@
             <th>Name</th>
             <th>Month</th>
             <th>Hours</th>
+            <th>Rate</th>
             <th>Firm</th>
-            <th class="table-total">Total: <mark>{{ totalHours }} hr</mark></th>
+            <th class="table-total"><mark><div>{{ totalHours }}hr</div> <div>{{ totalSalary }}Kč</div></mark></th>
           </tr>
           </thead>
 
@@ -74,6 +75,7 @@
             <td>{{ history.Worker_name }}</td>
             <td>{{ history.Month | dateFormatter }}</td>
             <td>{{ history.Hours }}</td>
+            <td>{{ history.Rate }}</td>
             <td>{{ history.Firm }}</td>
             <td>
               <div>
@@ -155,6 +157,9 @@ export default {
   computed: {
     totalHours() {
       return this.histories.reduce((a,i) => a = a + this.WithComaToFloat(i.Hours), 0).toFixed(1)
+    },
+    totalSalary() {
+      return this.histories.reduce((a,i) => a = a + this.WithComaToFloat(i.Hours) * this.WithComaToFloat(i.Rate), 0).toFixed(1)
     },
     watchFilters() {
       return {

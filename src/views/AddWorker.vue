@@ -141,6 +141,26 @@
             </multiselect>
           </div>
 
+          <div class="input-field col s6 m6">
+            <label>Rate</label>
+            <input
+              v-model="newWorker.Rate"
+              id="worker_rate"
+              type="text"
+              :class="{
+                invalid: $v.newWorker.Rate.$error,
+                valid: !$v.newWorker.Rate.$invalid,
+              }"
+            />
+            <span
+              v-if="
+                $v.newWorker.Rate.$dirty && !$v.newWorker.Rate.numeric
+              "
+              class="danger"
+              >Rate should be a number</span
+            >
+          </div>
+
           <div class="form-btns">
             <button class="waves-effect waves-light btn">Save</button>
             <router-link
@@ -160,7 +180,7 @@
 import moment from "moment";
 import router from "../router";
 const { ipcRenderer } = require("electron");
-import { required } from "vuelidate/lib/validators";
+import { required, numeric } from "vuelidate/lib/validators";
 
 const isDate = (value) => moment(value, "MM.YYYY", true).isValid();
 
@@ -180,6 +200,7 @@ export default {
         startDate: "",
         End: null,
         endDate: "",
+        Rate: "",
         Active: { label: "Active", value: 1 },
       },
       firms: [],
@@ -200,6 +221,9 @@ export default {
         isDate(value) {
           return isDate(value);
         },
+      },
+      Rate: {
+        numeric
       },
       endDate: {
         minDate() {
@@ -248,7 +272,8 @@ export default {
     },
     addWorker() {
       let query = JSON.parse(JSON.stringify(this.newWorker));
-      query.Active = this.newWorker.Active.value;
+      if (!query.Rate) query.Rate = 0
+      query.Active = this.newWorker.Active.value
 
       if (this.$route.params.worker) {
         if (ipcRenderer.sendSync("edit-worker", query)) this.redirect();
@@ -268,6 +293,7 @@ export default {
       this.newWorker.Name = this.$route.params.worker.Name;
       this.newWorker.Age = this.$route.params.worker.Age;
       this.newWorker.Sex = this.$route.params.worker.Sex;
+      this.newWorker.Rate = this.$route.params.worker.Rate;
       this.newWorker.Firm.Name = this.$route.params.worker.Firm;
       this.newWorker.Firm.Id = this.$route.params.worker.Firm_id;
       this.newWorker.Active = this.$route.params.worker.Active

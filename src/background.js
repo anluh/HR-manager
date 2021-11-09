@@ -111,7 +111,6 @@ let db = new sqlite3.Database(pathDatabase)
 ipcMain.on("ChangeCurrentDB", () => {
   db = new sqlite3.Database(pathDatabase)
 
-  console.log('Database switched to new one')
   mainWindow.webContents.send("ChangeCurrentDB:res");
 });
 
@@ -146,6 +145,7 @@ ipcMain.on("autocompleteWorkers", (event, arg) => {
              FROM Workers
              WHERE (${parseFloat(arg.MonthStart)} > Start OR ${parseFloat(arg.MonthEnd)} > Start)
                AND (${parseFloat(arg.MonthStart)} < End)
+               AND Active=1
              ORDER BY Name`, (err, rows) => {
       result.push(rows)
     }, () => {
@@ -212,8 +212,8 @@ ipcMain.on("add-worker", function (event, arg) {
             WHERE Name = '${arg.Name}'`, (err, row) => {
       if (row) event.returnValue = false;
       else {
-        db.run(`INSERT into Workers (Name, Age, Sex, Firm, Firm_id, Start, End, Active)
-                values ('${arg.Name}', '${arg.Age}', '${arg.Sex}', '${arg.Firm.Name}', ${arg.Firm.Id}, '${arg.Start}', '${arg.End}', ${parseFloat(arg.Active)})`, function (err) {
+        db.run(`INSERT into Workers (Name, Age, Sex, Firm, Firm_id, Start, End, Active, Rate)
+                values ('${arg.Name}', '${arg.Age}', '${arg.Sex}', '${arg.Firm.Name}', ${arg.Firm.Id}, '${arg.Start}', '${arg.End}', ${parseFloat(arg.Active)}, ${parseFloat(arg.Rate)})`, function (err) {
           if (err) console.log(err)
           event.returnValue = true;
         })
@@ -234,7 +234,8 @@ ipcMain.on("edit-worker", (event, arg) => {
               Firm_id=${arg.Firm.Id},
               Start='${arg.Start}',
               End='${arg.End}',
-              Active=${parseFloat(arg.Active)}
+              Active=${parseFloat(arg.Active)},
+              Rate=${parseFloat(arg.Rate)}
           WHERE Id = ${parseFloat(arg.Id)}`, (err) => {
     if (err) {
       console.log(err)
@@ -397,15 +398,16 @@ ipcMain.on("add-salary", function (event, arg) {
 
 ipcMain.on("fetchHoursHistory", function (event, arg) {
   let query = '';
-  if (arg.month) query += `AND Month BETWEEN ${parseFloat(arg.month.MonthStart)} AND ${parseFloat(arg.month.MonthEnd)}`
-  if (arg.firm) query += ` AND Firm='${arg.firm}'`
+  if (arg.month) query += `AND History.Month BETWEEN ${parseFloat(arg.month.MonthStart)} AND ${parseFloat(arg.month.MonthEnd)}`
+  if (arg.firm) query += ` AND History.Firm='${arg.firm}'`
   if (arg.worker) query += ` AND Worker_name='${arg.worker}'`
   query += ` ORDER BY Worker_name ASC`
 
   const result = []
   db.serialize(function () {
-    db.each(`SELECT *
-             FROM History
+    db.each(`SELECT History.Id, Worker_id, Worker_name, History.Month, Hours, History.Firm, History.Report_id, Rate
+             FROM History 
+             INNER JOIN Workers on Workers.Id = History.Worker_id
              WHERE Hours!='' ${query}`, (err, rows) => {
       if (err) console.log(err)
       result.push(rows)
@@ -435,7 +437,6 @@ ipcMain.on("update-hours", (event, arg) => {
 
 // ========== Worker Info API ==========
 ipcMain.on("fetchWorkerInfo", function (event, arg) {
-  console.log(arg)
   let yearDeposit=''
   let yearMonth=''
 
@@ -493,6 +494,7 @@ ipcMain.on("autocompleteWorkersDeposit", function () {
   db.serialize(function () {
     db.each(`SELECT Id, Name
              FROM Workers
+             WHERE Active=1
              ORDER BY Name`, (err, rows) => {
       result.push(rows)
     }, () => {
@@ -656,11 +658,11 @@ ipcMain.on("saveReport", function (event, arg) {
     if (!arg.Other) arg.Other = 0;
     if (!arg.Insurance) arg.Insurance = 0;
     db.run(`INSERT into Reports (Worker_name, Worker_id, Firm, Month, Rate, Hours, Salary, Insurance, Deposit, Other,
-                                 Total)
+                                 Total, Salary_date)
             values ('${arg.Worker_name}', '${arg.Worker_id}', '${arg.Firm}', ${parseFloat(arg.Month)},
                     ${parseFloat(arg.Rate)}, ${parseFloat(arg.Hours)}, ${parseFloat(arg.Salary)},
                     ${parseFloat(arg.Insurance)}, '${arg.Deposit}', ${parseFloat(arg.Other)},
-                    ${parseFloat(arg.Total)})`, function (err) {
+                    ${parseFloat(arg.Total)}, '${arg.Salary_date}')`, function (err) {
       if (err) console.log(err);
     });
     db.each(`SELECT Id

@@ -1,6 +1,7 @@
 <template>
   <div class="worker-info">
     <div class="page-title">
+      <back-button />
       <h3>Worker info: {{ name }}</h3>
     </div>
 
@@ -123,6 +124,7 @@
               <th>Insurance</th>
               <th>Deposit</th>
               <th>Other</th>
+              <th>Date</th>
               <th>Total</th>
             </tr>
           </thead>
@@ -137,6 +139,7 @@
               <td>{{ report.Insurance }}</td>
               <td>{{ report.Deposit }}</td>
               <td>{{ report.Other }}</td>
+              <td>{{ report.Salary_date }}</td>
               <td>{{ report.Total }}</td>
               <td>
                 <modal @submit="deleteReport(report)" submit-btn="Delete">

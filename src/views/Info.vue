@@ -91,6 +91,7 @@
               <td>{{ reportWorker.Insurance | numberFormatter }}</td>
               <td>{{ reportWorker.Deposit | numberFormatter }}</td>
               <td>{{ reportWorker.Other | numberFormatter }}</td>
+              <td>{{ reportWorker.Salary_date }}</td>
               <td>{{ reportWorker.Total | numberFormatter }}</td>
             </tr>
           </tbody>
@@ -150,6 +151,7 @@ export default {
           "Insurance",
           "Deposit",
           "Other",
+          "Date",
           "Total",
         ],
         czech: [
@@ -162,6 +164,7 @@ export default {
           "Pojištění",
           "Záloha",
           "Jiné",
+          "Datum",
           "K vyplacení",
         ],
       },

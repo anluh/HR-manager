@@ -513,6 +513,7 @@ export default {
         let query = {};
         query.Rate = report.Rate;
         query.Worker_id = report.Worker_id;
+        report.Salary_date = this.today
 
         report.Total === 0
           ? (query.Deposit = report.Deposit - report.Salary + report.Insurance)

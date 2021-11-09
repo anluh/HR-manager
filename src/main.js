@@ -6,6 +6,7 @@ import Vuelidate from 'vuelidate'
 import Print from 'vue-print-nb'
 import multiselect from 'vue-multiselect'
 import DatePicker from 'vue2-datepicker';
+import BackButton from './components/BackButton.vue';
 
 Vue.use(Print);
 Vue.use(Vuelidate)
@@ -25,13 +26,14 @@ Vue.filter('reverse', function(value) {
 Vue.mixin({
   methods: {
     WithComaToFloat(value) {
-      return parseFloat(value.toString().replace(',','.'))
+      return value ? parseFloat(value.toString().replace(',','.')) : 0
     }
   }
 })
 
 Vue.component('multiselect', multiselect)
 Vue.component('DatePicker', DatePicker)
+Vue.component('BackButton', BackButton)
 
 new Vue({
   router,
