@@ -1,0 +1,39 @@
+.pagination-template
+  text-align: right
+
+.pagination--wrapper
+  display: flex
+  justify-content space-between
+  margin-bottom: 20px
+  width: 350px
+
+  i
+    font-size: 20px
+
+  &>div
+    display: flex
+    align-items: center
+
+.pagination
+  width: auto
+
+
+  &>*
+    margin-left: 15px
+
+  &__item
+    font-size: 16px
+    &.active
+      background: $main-light
+
+.pagination__btn
+  transition: all .2s ease-in-out
+  cursor: pointer
+
+
+  &:hover:not(.disabled)
+    color: $main-light
+
+  &.disabled
+    opacity: .4
+    pointer-events: none

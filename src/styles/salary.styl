@@ -1,0 +1,36 @@
+.salary
+  position: relative
+
+.salary__wrapper
+  padding: 0 50px 80px
+
+  .input-field
+    .error
+      position: absolute
+      right: 0
+      left: 0
+      bottom: -50%
+
+.add-salary
+  margin-bottom: 40px
+  &__month
+    width: 250px
+
+  &__data
+    display: flex
+    justify-content: space-between
+    align-items: center
+
+    .input-field
+      flex: 1
+
+    .input-field:not(:last-child)
+      margin-right: 15px
+
+    .btn
+      flex-basis 100px
+
+.disabled
+  .input-field, button
+    pointer-events:none
+    opacity .2

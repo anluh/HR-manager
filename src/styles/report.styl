@@ -1,0 +1,231 @@
+.select-worker
+  text-align left
+
+  &__month
+    width: 200px
+    display: inline-block
+
+.disabled
+  pointer-events none
+  opacity: .3
+
+.select-worker__lists
+  display: flex
+  text-align: left
+  justify-content: space-around
+
+  &>*:not(:last-child)
+    margin-right: 20px
+
+  .firm-list,
+  .worker-list
+    border: 1px solid $main-color
+    flex: 1 0 400px
+
+    .list-wrapper
+      min-height: 400px
+      height 40vh
+      overflow: auto
+
+    .title
+      text-align: center
+      background: $main-color
+      color: #fff
+      margin: 0
+      padding: 10px 0
+
+    .list-item:nth-child(odd)
+      background-color: rgba(242,242,242,0.5);
+
+    .list-item
+      padding: 7px 15px
+      font-size: 16px
+      display: flex
+      justify-content: space-between
+      align-items: center
+      cursor: pointer
+      transition: all 0.2s ease-in-out;
+      margin-bottom: 1px
+
+      &.active
+        background-color: $main-light;
+        color: #fff
+
+
+      &:not(.active):hover
+        background-color: rgba(38,166,154,0.2);
+
+.firm-list.selected
+  pointer-events: none
+  .list-item:not(.active)
+    opacity: .3
+
+.worker-list
+  .list-item.active
+    pointer-events none
+
+.print-title
+  text-align: center
+  font-size: 18px
+  font-weight bold
+
+.print-data
+  font-size: 10px
+  margin-bottom: 5px
+  font-weight bold
+
+.report-list
+  margin-top: 40px
+  @media print
+    font-size: 10px
+
+    td, th
+      text-align center
+
+    td:first-child, th:first-child
+      text-align left
+
+    td:nth-last-child(2),
+    th:last-child
+      text-align right
+
+    .total-money
+      font-size 10px
+      padding-bottom 5px
+      margin-right: 0
+      float right
+      font-weight bold
+      margin-top: 10px
+      padding-right: 5px
+
+    tbody
+      tr
+        background transparent !important
+      tr:first-child
+        border-top 1px solid black
+      tr:last-child
+        border-bottom 1px solid black
+      td
+        padding: 5px
+
+.report
+  tbody
+    td:not(:first-child, :last-child)
+      width: 10%
+
+.rate-input
+  margin: 0
+  input
+    height: 2rem
+    max-width 50px
+
+.total-money
+  text-align right
+  margin-right: 30px
+  margin-top: 40px
+
+.print
+  display: none
+
+.report
+  .submit-btns
+    text-align right
+
+    button
+      margin-left: 20px
+      width: 120px
+      margin-top: 20px
+      i
+        margin-right: 10px
+        vertical-align: middle
+
+
+@media print
+  .no-print
+    display: none
+  .print
+    display: block
+
+  #print-report
+    padding: 0 60px
+
+  .striped.report tbody
+    tr:nth-child(odd)
+      background-color: rgba(242,242,242,0.7)
+      -webkit-print-color-adjust: exact;
+
+.submit-btns
+  position: relative
+  padding-top: 30px
+.rate-empty
+  background $red-lighten
+  top: 0
+  width: 100%
+  position: absolute
+.saveHint
+  position: relative
+  overflow: visible
+
+  span
+    position: absolute
+    font-size: 11px;
+    line-height: 13px;
+    width: 100%;
+    text-align: left;
+    bottom: 112%;
+    left: 0;
+    background: $red-lighten;
+    color: #FFF !important
+    padding: 5px 7px;
+    border-radius: 5px 5px 0 5px;
+    text-transform none
+    transition: opacity .3s ease-in-out
+
+.button-wrapper
+  display: inline-block
+  position: relative
+
+  span
+    color: #9F9F9F
+    position: absolute
+    cursor: pointer
+    right: -18px
+
+.tabs
+  &__item
+    display: inline-block
+    width: 130px
+    border: 1px solid $main-light
+    border-radius: 30px
+    padding: 7px 10px
+    text-align center
+    font-weight: 600
+    color: $main-color
+    cursor: pointer
+    margin-right: 20px
+
+    &.active
+      background $main-light
+      color #fff
+
+.select-worker-wrapper
+  display: flex
+  align-items: center
+
+  .select-worker__auto
+    width: 400px
+    margin-left: 20px
+    position: relative
+    display: flex
+    align-items: center
+
+    .input-field
+      flex 1
+
+
+    button
+      margin-left: 20px
+      min-width: 100px
+      display: flex
+      justify-content: center
+      align-items: center
