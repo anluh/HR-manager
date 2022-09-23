@@ -395,7 +395,7 @@ export default {
         total = rate * result.Hours - result.Insurance - result.Deposit;
         result.Salary = rate * result.Hours;
 
-        total > 0 ? (result.Total = total) : (result.Total = 0);
+        total > 0 ? (result.Total = Math.floor(total)) : (result.Total = 0);
       } else {
         result.Total = "";
       }
@@ -469,11 +469,14 @@ export default {
     reset() {
       this.workers.splice(0, this.workers.length);
       this.report.splice(0, this.report.length);
-      this.month = "";
       this.disableFirms = 0;
       this.firms.forEach((firm) => {
         firm.active = 0;
       });
+
+      if (this.tab === true) {
+        this.month = "";
+      }
     },
     countTotal(reportItem) {
       let rate = parseFloat(reportItem.Rate);
@@ -489,7 +492,7 @@ export default {
           other;
         reportItem.Salary = rate * reportItem.Hours;
 
-        total > 0 ? (reportItem.Total = total) : (reportItem.Total = 0);
+        total > 0 ? (reportItem.Total = Math.floor(total)) : (reportItem.Total = 0);
       } else {
         reportItem.Total = "";
       }

@@ -42,7 +42,7 @@ Vue.filter('reverse', function(value) {
 Vue.mixin({
   methods: {
     WithComaToFloat(value) {
-      return value ? parseFloat(value.toString().replace(',','.')) : 0
+      return value ? Math.floor(parseFloat(value.toString().replace(',','.'))) : 0
     }
   },
   computed: {
@@ -52,7 +52,7 @@ Vue.mixin({
   },
   filters: {
     numberFormatter(value) {
-      return value ? parseFloat(value).toLocaleString().replace(",", " ") : 0;
+      return value ? Math.floor(parseFloat(value)).toLocaleString() : 0;
     }
   }
 })
